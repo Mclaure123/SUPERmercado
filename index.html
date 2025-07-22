@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Misión Supermercado v1.2</title>
+    <title>Misión Supermercado v1.4</title>
     <style>
         :root {
             --color-bg: #1a1a1d;
@@ -250,6 +250,7 @@
                 _createProductCard(item) {
                     const itemEl = document.createElement('div');
                     itemEl.className = 'product-card';
+                    itemEl.title = item.name;
                     if (item.isolated) itemEl.classList.add('isolated');
 
                     const emojiContainer = document.createElement('div');
@@ -441,7 +442,7 @@
                 DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); });
                 window.addEventListener('resize', () => {
                     if (activeScreenId === 'screen-level-select') UIManager.checkAndSetLayoutMode();
-                    if (activeScreenId === 'screen-game') GameManager.renderProblem();
+                    if (activeScreenId === 'screen-game' && appState.currentProblem) GameManager.renderProblem();
                 });
                 DOM.btnProfile.innerHTML = ICONS.PROFILE;
                 DOM.btnProfile.addEventListener('click', () => { UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Misión Supermercado (v1.3 - Teclado y Reinicio)</title>
+    <title>Misión Supermercado v1.3</title>
     <style>
         :root {
             --color-bg: #1a1a1d;
@@ -25,23 +25,29 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { width: 100vw; height: 100vh; overflow: hidden; font-family: var(--font-main); background-color: var(--color-bg); color: var(--color-text); }
+        #app-container { position: relative; width: 100%; height: 100%; }
 
-        @keyframes draw { 0% { stroke-dashoffset: 800; } 100% { stroke-dashoffset: 0; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
         @keyframes pop-in { 0% { opacity: 0; transform: scale(0.7); } 80% { opacity: 1; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes flash-confirm { 0% { box-shadow: 0 0 15px 5px rgba(0, 246, 255, 0.4); } 100% { box-shadow: none; } }
         @keyframes flash-red-anim { 0% { border-color: var(--color-error); } 100% { border-color: var(--color-disabled-text); } }
-        @keyframes bios-glitch { 0%, 100% { opacity: 1; transform: skewX(0deg); } 50% { opacity: 0.8; transform: skewX(-5deg); } }
-        
+        @keyframes heart-beat { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        @keyframes scanline-anim { 0% { transform: translateY(0%); } 100% { transform: translateY(-50%); } }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } 50% { box-shadow: 0 0 16px rgba(0, 246, 255, 0.4); } 100% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } }
+
         .pop-in { animation: pop-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
         .flash-animation { animation: flash-confirm 0.4s ease-out; }
+        .key-flash { animation: flash-confirm 0.2s ease-out; }
 
-        .screen { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; opacity: 0; transform: scale(0.98); transition: opacity var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out; }
+        .screen { display: none; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; opacity: 0; transform: scale(0.98); transition: opacity var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out; }
         .screen.active { display: flex; opacity: 1; transform: scale(1); }
         .screen-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 700px; gap: 25px; height: 100%; padding: 20px; }
         
-        .title { font-size: clamp(2.2rem, 8vw, 4rem); font-weight: 700; text-align: center; color: var(--color-primary); text-shadow: 0 0 10px rgba(0, 246, 255, 0.3); }
-        .subtitle { font-size: clamp(1.2rem, 4vw, 1.8rem); text-align: center; color: #aaa; }
+        .title { font-size: clamp(2.2rem, 8vw, 4rem); font-weight: 700; text-align: center; color: var(--color-primary); text-shadow: 0 0 10px rgba(0, 246, 255, 0.3); min-height: 1.2em; }
+        .subtitle { font-size: clamp(1.2rem, 4vw, 1.8rem); text-align: center; color: #aaa; min-height: 1.2em; }
+        .typing-cursor::after { content: '▋'; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
         .btn { padding: 15px 30px; font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; color: var(--color-bg); background-color: var(--color-primary); border: none; border-radius: var(--border-radius-main); cursor: pointer; transition: all 0.2s ease-out; min-width: clamp(220px, 50vw, 300px); box-shadow: var(--glow-main); }
         .btn:hover { background-color: var(--color-primary-dark); box-shadow: var(--glow-main-hover); transform: translateY(-2px); }
         .btn:active { transform: scale(0.97) translateY(0); }
@@ -51,17 +57,17 @@
         .btn-danger:hover { background-color: var(--color-danger); box-shadow: 0 0 15px rgba(255, 0, 160, 0.4); }
         .btn-small { font-size: clamp(0.9rem, 2vw, 1rem); padding: 10px 20px; min-width: auto; }
         
+        #scanline-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 200%; pointer-events: none; z-index: 9999; background: repeating-linear-gradient(to bottom, rgba(0, 246, 255, 0.03), rgba(0, 246, 255, 0.03) 1px, transparent 1px, transparent 4px); animation: scanline-anim 20s linear infinite; }
         #screen-bios { background-color: #111; color: var(--color-primary); font-family: var(--font-main); }
-        #bios-logo-svg { width: clamp(100px, 20vh, 150px); }
-        #bios-logo-svg path, #bios-logo-svg circle { stroke: var(--color-primary); stroke-dasharray: 800; stroke-dashoffset: 800; animation: draw 2s linear forwards; }
-        #bios-text { opacity: 0; animation: fadeIn 1s 1.5s forwards; }
+        #bios-logo { width: 100px; height: 100px; }
+        #bios-logo path, #bios-logo circle { stroke: var(--color-primary) !important; }
+        #bios-text { min-height: 1.2em; }
         .display-panel { width: 100%; background-color: var(--color-surface); border: 1px solid var(--color-surface-light); border-radius: var(--border-radius-main); padding: 15px; }
         
         #name-display { min-height: 60px; font-size: clamp(1.5rem, 5vw, 2.5rem); display: flex; align-items: center; justify-content: center; font-family: var(--font-main); }
         #keyboard-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 8px; }
         .keyboard-row { display: flex; justify-content: center; gap: 8px; }
         .key { display: flex; justify-content: center; align-items: center; height: clamp(45px, 7vh, 55px); flex-grow: 1; font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 500; background-color: var(--color-surface); color: var(--color-text); border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.1s, transform 0.1s; }
-        .key.key-active { background-color: var(--color-primary-dark); transform: scale(0.95); }
         .key:active { background-color: var(--color-bg); transform: translateY(1px); }
         .key.function { background-color: var(--color-disabled-bg); }
         .key svg { width: clamp(24px, 4vh, 28px); height: auto; fill: var(--color-text); }
@@ -72,7 +78,6 @@
         #name-confirm-key.disabled svg { fill: var(--color-disabled-text); }
         #name-confirm-key svg { fill: var(--color-bg); }
         
-        #screen-level-select .screen-content-wrapper { justify-content: space-between; }
         #level-select-header { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 700px; padding: 0 10px; flex-shrink: 0; }
         #btn-profile { background: none; box-shadow: none; border: none; cursor: pointer; padding: 5px; }
         #btn-profile svg { width: 32px; height: 32px; fill: #aaa; transition: fill 0.2s; }
@@ -91,9 +96,9 @@
         .list-mode .level-theme { font-size: 0.8rem; }
         .list-mode .level-stars, .list-mode .level-icon { font-size: 1rem; }
         .level-btn { background-color: transparent; border: 2px solid var(--color-surface-light); color: var(--color-text); border-radius: var(--border-radius-main); font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .level-btn:hover { background-color: var(--color-surface); border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-3px); }
+        .level-btn:hover { background-color: var(--color-surface); border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-3px); animation: pulse-glow 1.5s infinite; }
         .level-btn.locked { background-color: var(--color-surface); border-color: var(--color-disabled-bg); color: var(--color-disabled-text); cursor: not-allowed; opacity: 0.6; }
-        .level-btn.locked:hover { transform: none; background-color: var(--color-surface); }
+        .level-btn.locked:hover { transform: none; background-color: var(--color-surface); animation: none; }
         .level-info-wrapper, .level-status-wrapper { pointer-events: none; }
         .level-title { font-size: 1.1rem; }
         .level-theme { font-size: 0.8rem; font-weight: normal; opacity: 0.8; }
@@ -108,6 +113,8 @@
         #game-hud { width: 100%; max-width: 700px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; font-size: clamp(0.8rem, 2vw, 1rem); color: #aaa; gap: 10px;}
         #hud-left { display: flex; align-items: center; gap: 10px; }
         #hud-right { display: flex; align-items: center; gap: 10px; }
+        #hud-lives { display: flex; gap: 5px; font-size: 1.5rem; color: var(--color-error); }
+        #hud-lives .life.lost { opacity: 0.3; }
         #hud-tactical { display: flex; gap: 5px; }
         .tactical-btn { background-color: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-surface-light); font-family: var(--font-main); font-size: 0.8rem; padding: 5px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .tactical-btn:hover:not(:disabled) { background-color: var(--color-surface-light); border-color: var(--color-primary); color: var(--color-primary); }
@@ -115,20 +122,20 @@
         #hud-wins-tracker { display: flex; gap: 4px; }
         .win-dot { width: 10px; height: 10px; border: 2px solid var(--color-disabled-text); border-radius: 3px; }
         .win-dot.filled { background-color: var(--color-primary); border-color: var(--color-primary); }
-        .hud-error-flash #hud-wins-tracker .win-dot:not(.filled) { animation: flash-red-anim 0.8s ease-out; }
+        .hud-error-flash #hud-lives .life:last-of-type { animation: heart-beat 0.5s ease-in-out; }
         #hud-difficulty, #hud-streak { font-weight: bold; padding: 4px 10px; border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); }
-        #problem-container { background-color: var(--color-surface); width: 100%; max-width: 700px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        #problem-container { background-color: var(--color-surface); flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; width: 100%; max-width: 700px; }
         .problem-title { font-size: 1.2em; font-weight: bold; text-align: left; }
-        .problem-item-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px dashed var(--color-bg); flex-grow: 1; align-content: center; }
-        .product-card { display: flex; flex-direction: column; align-items: center; background-color: var(--color-bg); padding: 10px; border-radius: var(--border-radius-main); gap: 5px; transition: all 0.3s; width: 100px; }
+        .problem-item-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px dashed var(--color-bg); }
+        .problem-item-list.as-rows { flex-direction: column; }
+        .problem-item-row { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
+
+        .product-card { display: flex; flex-direction: column; align-items: center; background-color: var(--color-bg); padding: 10px; border-radius: var(--border-radius-main); gap: 5px; transition: opacity 0.3s; width: 90px; }
         .product-card.isolated { opacity: 0.4; text-decoration: line-through; }
-        .product-emoji-container { font-size: clamp(3rem, 9vh, 4rem); line-height: 1; display: flex; font-family: var(--font-system); transition: font-size 0.3s; }
-        .product-price { font-weight: bold; font-size: clamp(1.2rem, 3.5vh, 1.5rem); white-space: nowrap; transition: font-size 0.3s; }
+        .product-emoji-container { font-size: 2.8em; line-height: 1; display: flex; font-family: var(--font-system); }
+        .product-price { font-weight: bold; font-size: 1.1em; white-space: nowrap; }
         .problem-payment, .problem-question { font-size: 1.1em; text-align: left; }
         .problem-question { font-weight: bold; margin-top: 5px; }
-        #problem-container.high-item-count .product-card { width: 85px; padding: 5px; }
-        #problem-container.high-item-count .product-emoji-container { font-size: clamp(2.5rem, 7vh, 3.5rem); }
-        #problem-container.high-item-count .product-price { font-size: clamp(1rem, 3vh, 1.2rem); }
         #scan-result-display { color: var(--color-primary); font-weight: bold; margin-top: 10px; }
         #answer-display { width: 100%; max-width: 350px; margin: 0 auto; height: 55px; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; color: var(--color-primary); background-color: var(--color-bg); border: 1px solid var(--color-surface-light); border-radius: var(--border-radius-main); display: flex; align-items: center; justify-content: center; }
         #numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 350px; margin: 0 auto; }
@@ -136,7 +143,6 @@
         #numpad-enter:not(.disabled) { background-color: var(--color-primary); }
         #numpad-enter:not(.disabled) svg { fill: var(--color-bg); }
         
-        #screen-result .screen-content-wrapper { justify-content: center; }
         #screen-result .btn { box-shadow: none; }
         #screen-result.success { color: var(--color-primary); }
         #screen-result.failure { color: var(--color-error); }
@@ -146,77 +152,41 @@
         #result-icon path { fill: inherit; }
         #result-explanation { background: var(--color-surface); border: 1px solid var(--color-surface-light); padding: 15px; border-radius: var(--border-radius-main); font-size: 1.1em; white-space: pre-wrap; width: 100%; max-width: 600px; display: none; }
         
-        #screen-profile .screen-content-wrapper { justify-content: space-between; }
         #profile-stats { display: flex; gap: 40px; font-size: 1.5rem; text-align: center; }
         .stat-value { font-size: 3rem; font-weight: bold; color: var(--color-primary); }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <div id="screen-bios" class="screen active"> <div class="screen-content-wrapper"> <svg id="bios-logo-svg" viewBox="0 0 100 100"> <path d="M10 90 L20 90 L25 40 L80 40 L85 70 L60 70 L55 80 L90 80 M25 40 L30 20 L45 20 L50 40" stroke="#0F0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="35" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/><circle cx="70" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/> </svg><p id="bios-text">INICIANDO SISTEMA...</p> </div> </div>
-        <div id="screen-title" class="screen"> <div class="screen-content-wrapper"> <h1 class="title">Misión Supermercado</h1> <h2 class="subtitle">Un juego de matemáticas</h2> <button id="btn-start" class="btn">INICIAR</button> </div> </div>
-        <div id="screen-name" class="screen"> <div class="screen-content-wrapper"> <h2 class="subtitle">Introduce tu nombre</h2> <div id="name-display" class="display-panel">_</div> <div id="keyboard-container"></div> </div> </div>
-        <div id="screen-level-select" class="screen"> <div class="screen-content-wrapper"> <div id="level-select-header"><h2 id="level-select-greeting" class="subtitle"></h2><button id="btn-profile"></button></div> <div id="level-select-grid"></div> <div id="level-select-buttons"><button id="btn-infinite-mode" class="btn">Turno del Experto ♾️</button> <button id="btn-change-name" class="btn btn-secondary btn-small">Cambiar Nombre</button></div> </div> </div>
-        <div id="screen-game" class="screen"> <div id="scroll-content"> <div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-tactical"><button id="btn-scan" class="tactical-btn" disabled>SCAN</button><button id="btn-isolate" class="tactical-btn" disabled>ISOLATE</button><button id="btn-firewall" class="tactical-btn" disabled>FIREWALL</button></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div> <div id="problem-container" class="display-panel"></div> </div> <div id="action-bar"> <div id="answer-display">_</div> <div id="numpad-grid"></div> </div> </div>
-        <div id="screen-result" class="screen"> <div class="screen-content-wrapper"> <svg id="result-icon" viewBox="0 0 100 100"></svg> <h1 id="result-title" class="title"></h1> <p id="unlock-message"></p> <p id="result-explanation"></p> <button id="btn-next-mission" class="btn"></button> </div> </div>
-        <div id="screen-profile" class="screen"> <div class="screen-content-wrapper"> <h1 class="title">Progreso del Jugador</h1> <h2 id="profile-player-name" class="subtitle"></h2> <div id="profile-stats"> <div><div class="stat-value"><span id="profile-total-stars">0</span>/30</div><div>Estrellas</div></div> <div><div class="stat-value"><span id="profile-mastered-levels">0</span>/10</div><div>Niveles Dominados</div></div> </div> <button id="btn-back-to-levels" class="btn">Volver a Niveles</button><button id="btn-reset-progress" class="btn btn-danger btn-small">Reiniciar Progreso</button> </div> </div>
+        <div id="scanline-overlay"></div>
+        <div id="screen-bios" class="screen active"> <div class="screen-content-wrapper"> <svg viewBox="0 0 100 100" id="bios-logo"> <path d="M10 90 L20 90 L25 40 L80 40 L85 70 L60 70 L55 80 L90 80 M25 40 L30 20 L45 20 L50 40" stroke="#0F0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="35" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/><circle cx="70" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/> </svg><p id="bios-text"></p> </div> </div>
+        <div id="screen-title" class="screen"> <div class="screen-content-wrapper"> <h1 class="title typewriter-effect">Misión Supermercado</h1> <h2 class="subtitle">Un juego de matemáticas</h2> <button id="btn-start" class="btn">INICIAR</button> </div> </div>
+        <div id="screen-name" class="screen"> <div class="screen-content-wrapper"> <h2 class="subtitle typewriter-effect">Introduce tu nombre</h2> <div id="name-display" class="display-panel">_</div> <div id="keyboard-container"></div> </div> </div>
+        <div id="screen-level-select" class="screen"> <div class="screen-content-wrapper"> <div id="level-select-header"><h2 id="level-select-greeting" class="subtitle typewriter-effect"></h2><button id="btn-profile"></button></div> <div id="level-select-grid"></div> <div id="level-select-buttons"><button id="btn-infinite-mode" class="btn">Turno del Experto ♾️</button> <button id="btn-change-name" class="btn btn-secondary btn-small">Cambiar Nombre</button></div> </div> </div>
+        <div id="screen-game" class="screen"> <div id="scroll-content"> <div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-lives"></div><div id="hud-tactical"><button id="btn-scan" class="tactical-btn" disabled>SCAN</button><button id="btn-isolate" class="tactical-btn" disabled>ISOLATE</button><button id="btn-firewall" class="tactical-btn" disabled>FIREWALL</button></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div> <div id="problem-container" class="display-panel"></div> </div> <div id="action-bar"> <div id="answer-display">_</div> <div id="numpad-grid"></div> </div> </div>
+        <div id="screen-result" class="screen"> <div class="screen-content-wrapper"> <svg id="result-icon" viewBox="0 0 100 100"></svg> <h1 id="result-title" class="title typewriter-effect"></h1> <p id="unlock-message"></p> <p id="result-explanation"></p> <button id="btn-next-mission" class="btn"></button> </div> </div>
+        <div id="screen-profile" class="screen"> <div class="screen-content-wrapper"> <h1 class="title typewriter-effect">Progreso del Jugador</h1> <h2 id="profile-player-name" class="subtitle"></h2> <div id="profile-stats"> <div><div class="stat-value"><span id="profile-total-stars">0</span>/30</div><div>Estrellas</div></div> <div><div class="stat-value"><span id="profile-mastered-levels">0</span>/10</div><div>Niveles Dominados</div></div> </div> <button id="btn-back-to-levels" class="btn">Volver a Niveles</button><button id="btn-reset-progress" class="btn btn-danger btn-small">Reiniciar Progreso</button> </div> </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const WINS_TO_UNLOCK = 5;
             const SAVE_KEY = 'missionSupermarketSaveData';
+            let activeScreenId = 'screen-bios';
             const appState = { 
-                playerName: '', isShiftActive: false, gameMode: 'campaign', currentLevelIndex: null, currentAttempts: 0, infiniteStreak: 0, 
+                playerName: '', isShiftActive: false, gameMode: 'campaign', currentLevelIndex: null, lives: 3, currentAttempts: 1, infiniteStreak: 0, 
                 levels: Array(10).fill(null).map((_, i) => ({ unlocked: i === 0, wins: 0, stars: 0, rewardGiven: false })),
                 tacticalResources: { scanTotal: 0, isolateItem: 0, firewall: 0 },
-                sessionPriceList: {}
+                sessionPriceList: {},
+                currentProblem: null
             };
             const DOM = {
-                appContainer: document.getElementById('app-container'),
-                biosScreen: document.getElementById('screen-bios'),
-                gameScreen: document.getElementById('screen-game'), 
-                titleScreen: document.getElementById('screen-title'),
-                nameScreen: document.getElementById('screen-name'),
-                resultScreen: document.getElementById('screen-result'),
-                btnStart: document.getElementById('btn-start'), 
-                nameDisplay: document.getElementById('name-display'), 
-                keyboardContainer: document.getElementById('keyboard-container'), 
-                levelSelectGreeting: document.getElementById('level-select-greeting'), 
-                btnProfile: document.getElementById('btn-profile'), 
-                levelSelectGrid: document.getElementById('level-select-grid'), 
-                btnInfiniteMode: document.getElementById('btn-infinite-mode'), 
-                btnChangeName: document.getElementById('btn-change-name'), 
-                hudPlayerName: document.getElementById('hud-player-name'), 
-                hudWinsTracker: document.getElementById('hud-wins-tracker'), 
-                hudStreak: document.getElementById('hud-streak'), 
-                hudDifficulty: document.getElementById('hud-difficulty'), 
-                hudTactical: document.getElementById('hud-tactical'), 
-                scrollContent: document.getElementById('scroll-content'), 
-                actionBar: document.getElementById('action-bar'), 
-                problemContainer: document.getElementById('problem-container'), 
-                answerDisplay: document.getElementById('answer-display'), 
-                numpadGrid: document.getElementById('numpad-grid'), 
-                resultTitle: document.getElementById('result-title'), 
-                unlockMessage: document.getElementById('unlock-message'), 
-                resultIcon: document.getElementById('result-icon'), 
-                resultExplanation: document.getElementById('result-explanation'), 
-                btnNextMission: document.getElementById('btn-next-mission'), 
-                profilePlayerName: document.getElementById('profile-player-name'), 
-                profileTotalStars: document.getElementById('profile-total-stars'), 
-                profileMasteredLevels: document.getElementById('profile-mastered-levels'), 
-                btnBackToLevels: document.getElementById('btn-back-to-levels'), 
-                numpadEnter: null, 
-                btnResetProgress: document.getElementById('btn-reset-progress'), 
-                btnScan: document.getElementById('btn-scan'), 
-                btnIsolate: document.getElementById('btn-isolate'), 
-                btnFirewall: document.getElementById('btn-firewall'), 
-                levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper')
+                appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), hudTactical: document.getElementById('hud-tactical'), scrollContent: document.getElementById('scroll-content'), actionBar: document.getElementById('action-bar'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), numpadEnter: null, btnResetProgress: document.getElementById('btn-reset-progress'), btnScan: document.getElementById('btn-scan'), btnIsolate: document.getElementById('btn-isolate'), btnFirewall: document.getElementById('btn-firewall'), levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper'), biosText: document.getElementById('bios-text'),
             };
             const ICONS = { SHIFT: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`, BACKSPACE: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M22 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.79 13.21L15.5 14.5l-2.29-2.29L10.92 14.5 9.5 13.08l2.29-2.29L9.5 8.5l1.42-1.42 2.29 2.29L15.5 7.08l1.42 1.42-2.29 2.29L17.21 13.08l-1.42 1.42z"/></svg>`, CHECK: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`, CLEAR: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`, PROFILE: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, ENTER: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>` };
             const THEMED_PRODUCTS = { fruits: [ { name: 'Manzana', emoji: '🍎', priceRange: [1, 3] }, { name: 'Banana', emoji: '🍌', priceRange: [1, 2] }, { name: 'Naranja', emoji: '🍊', priceRange: [2, 4] }, { name: 'Uva', emoji: '🍇', priceRange: [5, 8] }, { name: 'Fresa', emoji: '🍓', priceRange: [4, 6] }, { name: 'Piña', emoji: '🍍', priceRange: [10, 15] }, { name: 'Cereza', emoji: '🍒', priceRange: [6, 9] }, { name: 'Sandía', emoji: '🍉', priceRange: [12, 18] }, { name: 'Pera', emoji: '🍐', priceRange: [2, 4] }, { name: 'Limón', emoji: '🍋', priceRange: [1, 2] } ], vegetables: [ { name: 'Brócoli', emoji: '🥦', priceRange: [5, 8] }, { name: 'Zanahoria', emoji: '🥕', priceRange: [1, 3] }, { name: 'Tomate', emoji: '🍅', priceRange: [2, 4] }, { name: 'Papa', emoji: '🥔', priceRange: [1, 2] }, { name: 'Maíz', emoji: '🌽', priceRange: [3, 5] }, { name: 'Berenjena', emoji: '🍆', priceRange: [4, 6] }, { name: 'Lechuga', emoji: '🥬', priceRange: [3, 5] }, { name: 'Cebolla', emoji: '🧅', priceRange: [1, 3] }, { name: 'Pimiento', emoji: '🫑', priceRange: [2, 4] }, { name: 'Ajo', emoji: '🧄', priceRange: [1, 2] } ], bakery: [ { name: 'Pan', emoji: '🍞', priceRange: [2, 5] }, { name: 'Galleta', emoji: '🍪', priceRange: [2, 4] }, { name: 'Dona', emoji: '🍩', priceRange: [4, 6] }, { name: 'Pastel', emoji: '🍰', priceRange: [20, 30] }, { name: 'Croissant', emoji: '🥐', priceRange: [5, 8] }, { name: 'Baguette', emoji: '🥖', priceRange: [6, 10] }, { name: 'Pretzel', emoji: '🥨', priceRange: [4, 7] }, { name: 'Cupcake', emoji: '🧁', priceRange: [8, 12] }, { name: 'Waffle', emoji: '🧇', priceRange: [10, 15] }, { name: 'Tarta', emoji: '🥧', priceRange: [15, 25] } ], dairy: [ { name: 'Leche', emoji: '🥛', priceRange: [5, 8] }, { name: 'Queso', emoji: '🧀', priceRange: [10, 15] }, { name: 'Yogur', emoji: '🍦', priceRange: [3, 6] }, { name: 'Huevo', emoji: '🥚', priceRange: [1, 2] }, { name: 'Mantequilla', emoji: '🧈', priceRange: [8, 12] }, { name: 'Helado', emoji: '🍨', priceRange: [15, 20] }, { name: 'Crema', emoji: '🍶', priceRange: [7, 10] }, { name: 'Batido', emoji: '🥤', priceRange: [12,16] }, { name: 'Requesón', emoji: '🧀', priceRange: [9,13] }, { name: 'Nata', emoji: '🍥', priceRange: [8,11] } ], pantry: [ { name: 'Arroz', emoji: '🍚', priceRange: [8, 12] }, { name: 'Fideos', emoji: '🍝', priceRange: [6, 9] }, { name: 'Atún', emoji: '🥫', priceRange: [7, 10] }, { name: 'Aceite', emoji: '🏺', priceRange: [15, 20] }, { name: 'Sal', emoji: '🧂', priceRange: [3, 5] }, { name: 'Miel', emoji: '🍯', priceRange: [12, 18] }, { name: 'Mostaza', emoji: '🌭', priceRange: [8, 11] }, { name: 'Harina', emoji: '🌾', priceRange: [5, 8] }, { name: 'Azúcar', emoji: '🍬', priceRange: [6, 9] }, { name: 'Café', emoji: '☕', priceRange: [18, 25] } ], drinks: [ { name: 'Jugo', emoji: '🧃', priceRange: [4, 7] }, { name: 'Agua', emoji: '💧', priceRange: [3, 5] }, { name: 'Gaseosa', emoji: '🥤', priceRange: [6, 9] }, { name: 'Té', emoji: '🍵', priceRange: [10, 15] }, { name: 'Limonada', emoji: '🍋', priceRange: [8,12] }, { name: 'Vino', emoji: '🍷', priceRange: [25,35] }, { name: 'Cerveza', emoji: '🍺', priceRange: [10,15] }, { name: 'Coctel', emoji: '🍸', priceRange: [15,20] }, { name: 'Whisky', emoji: '🥃', priceRange: [50,70] }, { name: 'Ginebra', emoji: '🍸', priceRange: [45,65] } ], meats: [ { name: 'Pollo', emoji: '🍗', priceRange: [20, 30] }, { name: 'Carne', emoji: '🥩', priceRange: [30, 40] }, { name: 'Salchicha', emoji: '🌭', priceRange: [2, 4] }, { name: 'Jamón', emoji: '🍖', priceRange: [15, 20] }, { name: 'Pescado', emoji: '🐟', priceRange: [25, 35] }, { name: 'Bacon', emoji: '🥓', priceRange: [18,25] }, { name: 'Camarón', emoji: '🍤', priceRange: [35,45] }, { name: 'Cangrejo', emoji: '🦀', priceRange: [40,50] }, { name: 'Costilla', emoji: '🍖', priceRange: [28,38] }, { name: 'Pavo', emoji: '🦃', priceRange: [50,60] } ], snacks: [ { name: 'Chocolate', emoji: '🍫', priceRange: [8, 12] }, { name: 'Papas Fritas', emoji: '🍟', priceRange: [5, 8] }, { name: 'Palomitas', emoji: '🍿', priceRange: [6, 10] }, { name: 'Maní', emoji: '🥜', priceRange: [4, 7] }, { name: 'Rosquilla', emoji: '🍩', priceRange: [5,9] }, { name: 'Sushi', emoji: '🍣', priceRange: [15,25] }, { name: 'Taco', emoji: '🌮', priceRange: [12,18] }, { name: 'Pizza', emoji: '🍕', priceRange: [30,40] }, { name: 'Hamburguesa', emoji: '🍔', priceRange: [20,30] }, { name: 'Hotdog', emoji: '🌭', priceRange: [15,22] } ], cleaning: [ { name: 'Jabón', emoji: '🧼', priceRange: [5, 8] }, { name: 'Champú', emoji: '🧴', priceRange: [15, 20] }, { name: 'Detergente', emoji: '✨', priceRange: [18, 25] }, { name: 'Esponja', emoji: '🧽', priceRange: [3, 6] }, { name: 'Papel Hig.', emoji: '🧻', priceRange: [12, 18] }, { name: 'Cepillo', emoji: '🧹', priceRange: [8,12] }, { name: 'Pasta D.', emoji: '😁', priceRange: [10,15] }, { name: 'Rastrillo', emoji: '🔪', priceRange: [7,11] }, { name: 'Escoba', emoji: '🧹', priceRange: [20,30] }, { name: 'Cubo', emoji: '🗑️', priceRange: [25,35] } ], };
             const LEVEL_THEMES = [ 'fruits', 'vegetables', 'bakery', 'dairy', 'pantry', 'drinks', 'meats', 'snacks', 'cleaning', 'all' ];
-            const LEVEL_CONFIG = [ { name: 'Fácil', minItems: 2, maxItems: 3, scenarios: ['total_cost'] }, { name: 'Fácil', minItems: 2, maxItems: 4, scenarios: ['total_cost', 'single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 4, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 5, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 4, maxItems: 5, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 4, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 7, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Experto', minItems: 6, maxItems: 7, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Súper Hard', minItems: 7, maxItems: 8, scenarios: ['single_bill', 'multi_bill'] }, ];
+            const LEVEL_CONFIG = [ { name: 'Fácil', minItems: 2, maxItems: 3, scenarios: ['total_cost'] }, { name: 'Fácil', minItems: 2, maxItems: 4, scenarios: ['total_cost', 'single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 4, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 5, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 4, maxItems: 5, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 4, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 7, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Experto', minItems: 6, maxItems: 8, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Súper Hard', minItems: 7, maxItems: 10, scenarios: ['single_bill', 'multi_bill'] }, ];
             const RESULT_ICONS = { success: `<path d="M38.7,80.2L12.2,53.7c-1.6-1.6-1.6-4.1,0-5.7l5.7-5.7c1.6-1.6,4.1-1.6,5.7,0L38.7,58l32-32c1.6-1.6,4.1-1.6,5.7,0l5.7,5.7c1.6,1.6,1.6,4.1,0,5.7L44.3,80.2C42.8,81.8,40.2,81.8,38.7,80.2z"/>`, failure: `<path d="M80.2,74.5L61.3,55.6l18.9-18.9c-1.6-1.6-1.6-4.1,0-5.7l-5.7-5.7c-1.6-1.6-4.1-1.6-5.7,0L50,44.3L31.1,25.5c-1.6-1.6-4.1-1.6-5.7,0l-5.7,5.7c-1.6,1.6-1.6,4.1,0,5.7l18.9,18.9L19.8,74.5c-1.6-1.6-1.6,4.1,0,5.7l5.7,5.7c1.6,1.6,4.1,1.6,5.7,0l18.9-18.9l18.9,18.9c1.6,1.6,4.1,1.6,5.7,0l5.7-5.7C81.8,78.6,81.8,76,80.2,74.5z"/>` };
             
             function saveState() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(appState)); } catch (e) { console.error("Failed to save state:", e); } }
@@ -226,9 +196,25 @@
                 goToScreen(screenId) { 
                     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
                     const screen = document.getElementById(screenId); 
-                    if (screen) screen.classList.add('active'); 
+                    if (screen) {
+                        screen.classList.add('active'); 
+                        activeScreenId = screenId;
+                        this.applyTypewriterEffect(screen);
+                    }
                     if (screenId === 'screen-game') { setTimeout(this.adjustGameLayout, 50); }
                     if (screenId === 'screen-level-select') { this.checkAndSetLayoutMode(); }
+                },
+                applyTypewriterEffect(screen) {
+                    const element = screen.querySelector('.typewriter-effect');
+                    if (element && !element.hasAttribute('data-typed')) {
+                        const text = element.textContent;
+                        element.textContent = '';
+                        element.classList.add('typing-cursor');
+                        typewriter(element, text, 50, () => {
+                            element.classList.remove('typing-cursor');
+                            element.setAttribute('data-typed', 'true');
+                        });
+                    }
                 },
                 adjustGameLayout() { if (DOM.actionBar) { const availableHeight = window.innerHeight - DOM.actionBar.offsetHeight; DOM.scrollContent.style.maxHeight = `${availableHeight}px`; } },
                 checkAndSetLayoutMode() {
@@ -268,45 +254,141 @@
             };
 
             const GameManager = {
+                _createProductCard(item) {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'product-card';
+                    if (item.isolated) itemEl.classList.add('isolated');
+
+                    const emojiContainer = document.createElement('div');
+                    emojiContainer.className = 'product-emoji-container';
+                    emojiContainer.textContent = item.emoji;
+
+                    const priceEl = document.createElement('div');
+                    priceEl.className = 'product-price';
+                    priceEl.textContent = `${item.totalPrice} Bs.`;
+
+                    itemEl.appendChild(emojiContainer);
+                    itemEl.appendChild(priceEl);
+                    return itemEl;
+                },
                 startNewGame(levelIndexOrMode) { 
-                    appState.userAnswer = ''; appState.currentAttempts = 1; 
+                    appState.userAnswer = ''; 
                     if (levelIndexOrMode === 'infinite') { 
-                        appState.gameMode = 'infinite'; DOM.hudTactical.style.display = 'none';
+                        appState.gameMode = 'infinite';
+                        DOM.hudTactical.style.display = 'none';
                     } else { 
-                        appState.gameMode = 'campaign'; appState.currentLevelIndex = levelIndexOrMode; DOM.hudTactical.style.display = 'flex';
-                        DOM.btnScan.classList.remove('used-in-mission'); DOM.btnIsolate.classList.remove('used-in-mission'); UIManager.updateTacticalHUD();
+                        appState.gameMode = 'campaign'; 
+                        appState.currentLevelIndex = levelIndexOrMode;
+                        appState.lives = 3;
+                        appState.currentAttempts = 1;
+                        DOM.hudTactical.style.display = 'flex';
+                        DOM.btnScan.classList.remove('used-in-mission'); 
+                        DOM.btnIsolate.classList.remove('used-in-mission'); 
+                        UIManager.updateTacticalHUD();
                     } 
-                    this.generateProblem(); this.renderProblem(); this.updateHUD(); UIManager.updateAnswerDisplay(); UIManager.goToScreen('screen-game'); 
+                    this.generateProblem(); 
+                    this.renderProblem(); 
+                    this.updateHUD(); 
+                    UIManager.updateAnswerDisplay(); 
+                    UIManager.goToScreen('screen-game'); 
                 },
                 updateHUD() {
-                    DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; DOM.hudStreak.style.display = 'none'; DOM.hudWinsTracker.style.display = 'none';
-                    if (appState.gameMode === 'infinite') { DOM.hudDifficulty.textContent = 'INFINITO ♾️'; DOM.hudStreak.className = 'hud-tag'; DOM.hudStreak.textContent = `Racha: ${appState.infiniteStreak}`; DOM.hudStreak.style.display = 'inline-block'; } 
-                    else { DOM.hudDifficulty.textContent = `Nivel ${appState.currentLevelIndex + 1}: ${LEVEL_CONFIG[appState.currentLevelIndex].name}`; DOM.hudWinsTracker.style.display = 'flex'; DOM.hudWinsTracker.innerHTML = ''; for (let i = 0; i < WINS_TO_UNLOCK; i++) { const dot = document.createElement('div'); dot.className = `win-dot ${i < appState.levels[appState.currentLevelIndex].wins ? 'filled' : ''}`; DOM.hudWinsTracker.appendChild(dot); } }
+                    DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; 
+                    DOM.hudStreak.style.display = 'none'; 
+                    DOM.hudWinsTracker.style.display = 'none';
+                    DOM.hudLives.style.display = 'none';
+
+                    if (appState.gameMode === 'infinite') { 
+                        DOM.hudDifficulty.textContent = 'INFINITO ♾️'; 
+                        DOM.hudStreak.className = 'hud-tag'; 
+                        DOM.hudStreak.textContent = `Racha: ${appState.infiniteStreak}`; 
+                        DOM.hudStreak.style.display = 'inline-block'; 
+                    } else { 
+                        DOM.hudDifficulty.textContent = `Nivel ${appState.currentLevelIndex + 1}: ${LEVEL_CONFIG[appState.currentLevelIndex].name}`; 
+                        
+                        DOM.hudWinsTracker.style.display = 'flex'; 
+                        DOM.hudWinsTracker.innerHTML = ''; 
+                        for (let i = 0; i < WINS_TO_UNLOCK; i++) { 
+                            const dot = document.createElement('div'); 
+                            dot.className = `win-dot ${i < appState.levels[appState.currentLevelIndex].wins ? 'filled' : ''}`; 
+                            DOM.hudWinsTracker.appendChild(dot); 
+                        }
+
+                        DOM.hudLives.style.display = 'flex';
+                        DOM.hudLives.innerHTML = '';
+                        for(let i=0; i < 3; i++){
+                            const lifeEl = document.createElement('span');
+                            lifeEl.className = 'life';
+                            lifeEl.textContent = '❤️';
+                            if(i >= appState.lives) lifeEl.classList.add('lost');
+                            DOM.hudLives.appendChild(lifeEl);
+                        }
+                    }
                 },
                 generateProblem() { 
                     const items = this.generateItems(); const totalCost = items.reduce((sum, item) => sum + item.totalPrice, 0); 
                     const { payment, paymentText, change, questionText, titleText } = this.generatePaymentAndQuestion(totalCost); 
-                    const explanation = `Costo Total: ${items.map(i => `${i.price}Bs`).join(' + ')} = ${totalCost} Bs.\n` + (payment !== totalCost ? `Pago: ${payment} Bs.\nCambio: ${payment} Bs - ${totalCost} = ${change} Bs.` : 'Pagaste exacto.'); 
+                    const explanation = `Costo Total: ${items.map(i => `${i.price} Bs`).join(' + ')} = ${totalCost} Bs.\n` + (payment !== totalCost ? `Pago: ${payment} Bs.\nCambio: ${payment} Bs - ${totalCost} Bs = ${change} Bs.` : 'Pagaste exacto.'); 
                     appState.currentProblem = { items, totalCost, payment, paymentText, questionText, titleText, answer: change, explanation }; 
                 },
                 renderProblem() {
+                    if(!appState.currentProblem) return;
                     const { items, titleText, paymentText, questionText } = appState.currentProblem;
-                    DOM.problemContainer.className = 'display-panel';
-                    if (items.length > 6) {
-                        DOM.problemContainer.classList.add('high-item-count');
-                    }
                     DOM.problemContainer.innerHTML = '';
-                    const titleEl = document.createElement('div'); titleEl.className = 'problem-title'; titleEl.textContent = titleText; DOM.problemContainer.appendChild(titleEl);
-                    const itemListEl = document.createElement('div'); itemListEl.className = 'problem-item-list';
-                    items.forEach(item => { 
-                        const itemEl = document.createElement('div'); itemEl.className = 'product-card'; if (item.isolated) itemEl.classList.add('isolated');
-                        const emojiContainer = document.createElement('div'); emojiContainer.className = 'product-emoji-container'; emojiContainer.textContent = item.emoji;
-                        const priceEl = document.createElement('div'); priceEl.className = 'product-price'; priceEl.textContent = `${item.totalPrice} Bs.`; 
-                        itemEl.appendChild(emojiContainer); itemEl.appendChild(priceEl); itemListEl.appendChild(itemEl); 
-                    });
+
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'problem-title';
+                    titleEl.textContent = titleText;
+                    DOM.problemContainer.appendChild(titleEl);
+
+                    const itemListEl = document.createElement('div');
+                    itemListEl.className = 'problem-item-list';
+
+                    const isMobile = window.innerWidth < 768;
+                    const itemCount = items.length;
+
+                    if (isMobile && itemCount >= 4 && itemCount <= 10) {
+                        itemListEl.classList.add('as-rows');
+                        let rowsDefinition;
+                        switch (itemCount) { case 4: rowsDefinition = [2, 2]; break; case 5: rowsDefinition = [3, 2]; break; case 6: rowsDefinition = [3, 3]; break; case 7: rowsDefinition = [4, 3]; break; case 8: rowsDefinition = [4, 4]; break; case 9: rowsDefinition = [5, 4]; break; case 10: rowsDefinition = [5, 5]; break; default: rowsDefinition = [itemCount]; }
+                        let itemIndex = 0;
+                        if(rowsDefinition) {
+                            rowsDefinition.forEach(countInRow => {
+                                const rowEl = document.createElement('div');
+                                rowEl.className = 'problem-item-row';
+                                for (let i = 0; i < countInRow; i++) {
+                                    if(items[itemIndex]) rowEl.appendChild(this._createProductCard(items[itemIndex++]));
+                                }
+                                itemListEl.appendChild(rowEl);
+                            });
+                        }
+                    } else {
+                        items.forEach(item => { itemListEl.appendChild(this._createProductCard(item)); });
+                    }
+
                     DOM.problemContainer.appendChild(itemListEl);
-                    if (paymentText) { const paymentEl = document.createElement('div'); paymentEl.className = 'problem-payment'; paymentEl.textContent = paymentText; DOM.problemContainer.appendChild(paymentEl); }
-                    const questionEl = document.createElement('div'); questionEl.className = 'problem-question'; questionEl.textContent = questionText; DOM.problemContainer.appendChild(questionEl);
+                    
+                    const scanResultEl = DOM.problemContainer.querySelector('#scan-result-display');
+                    if(scanResultEl) DOM.problemContainer.removeChild(scanResultEl);
+
+                    if (paymentText) {
+                        const paymentEl = document.createElement('div');
+                        paymentEl.className = 'problem-payment';
+                        paymentEl.textContent = paymentText;
+                        DOM.problemContainer.appendChild(paymentEl);
+                    }
+
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'problem-question';
+                    questionEl.textContent = questionText;
+                    DOM.problemContainer.appendChild(questionEl);
+                    
+                    if (DOM.btnScan.classList.contains('used-in-mission')) {
+                        const scanResultDisplay = document.createElement('div');
+                        scanResultDisplay.id = 'scan-result-display';
+                        scanResultDisplay.textContent = `Costo Total Escaneado: ${appState.currentProblem.totalCost} Bs.`;
+                        DOM.problemContainer.appendChild(scanResultDisplay);
+                    }
                 },
                 generateItems() {
                     let config, availableProducts;
@@ -324,49 +406,123 @@
                     return { payment, paymentText, change, questionText, titleText: titles[getRandomInt(0, titles.length - 1)] };
                 },
                 checkAnswer() {
-                    const isCorrect = parseInt(appState.userAnswer) === appState.currentProblem.answer; let stateWasModified = false;
-                    if (!isCorrect && appState.gameMode === 'campaign' && appState.tacticalResources.firewall > 0) {
-                        appState.tacticalResources.firewall--; saveState(); UIManager.updateTacticalHUD();
-                        DOM.answerDisplay.textContent = 'FIREWALL'; UIManager.triggerAnimation(DOM.answerDisplay, 'pop-in');
-                        setTimeout(() => { UIManager.updateAnswerDisplay(); }, 1200); return;
-                    }
-                    DOM.resultScreen.className = `screen active ${isCorrect ? 'success' : 'failure'}`; DOM.resultIcon.innerHTML = isCorrect ? RESULT_ICONS.success : RESULT_ICONS.failure;
-                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in'); DOM.resultExplanation.style.display = isCorrect ? 'none' : 'block';
+                    const isCorrect = parseInt(appState.userAnswer) === appState.currentProblem.answer;
                     DOM.resultExplanation.textContent = `La respuesta correcta es ${appState.currentProblem.answer} Bs.\n\n${appState.currentProblem.explanation}`;
-                    if (appState.gameMode === 'infinite') { if (isCorrect) { appState.infiniteStreak++; this.startNewGame('infinite'); return; } else { DOM.resultTitle.textContent = 'RACHA TERMINADA'; DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`; DOM.btnNextMission.textContent = 'Volver al Menú'; DOM.btnNextMission.onclick = () => { appState.infiniteStreak = 0; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); }; }
-                    } else {
-                        let unlockedNewLevel = false; let earnedResource = null; const level = appState.levels[appState.currentLevelIndex];
-                        if (isCorrect) {
-                            if (level.wins < WINS_TO_UNLOCK) { level.wins++; stateWasModified = true; }
-                            const starsEarned = appState.currentAttempts === 1 ? 3 : (appState.currentAttempts === 2 ? 2 : 1); 
-                            if (starsEarned > level.stars) { 
-                                level.stars = starsEarned; stateWasModified = true;
-                                if (starsEarned === 3 && !level.rewardGiven) {
-                                    level.rewardGiven = true; const resources = ['scanTotal', 'isolateItem', 'firewall']; const resourceType = resources[getRandomInt(0, resources.length - 1)];
-                                    appState.tacticalResources[resourceType]++; earnedResource = resourceType.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
-                                }
-                            }
-                            if (level.wins >= WINS_TO_UNLOCK && appState.currentLevelIndex < appState.levels.length - 1) { const nextLevel = appState.levels[appState.currentLevelIndex + 1]; if (!nextLevel.unlocked) { nextLevel.unlocked = true; unlockedNewLevel = true; stateWasModified = true; } }
-                        } else { UIManager.triggerAnimation(DOM.gameScreen, 'hud-error-flash'); }
-                        if (stateWasModified) { saveState(); }
-                        DOM.resultTitle.textContent = isCorrect ? '¡CORRECTO!' : 'CASI...'; UIManager.triggerAnimation(DOM.resultTitle, 'pop-in');
-                        let unlockMsgText = ''; if (unlockedNewLevel) unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`; if (earnedResource) unlockMsgText += `\nRECURSO OBTENIDO: [${earnedResource}]`;
-                        DOM.unlockMessage.textContent = unlockMsgText; if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
-                        if (isCorrect && level.wins >= WINS_TO_UNLOCK) { DOM.btnNextMission.textContent = 'Ir a Niveles'; DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); }; } else { DOM.btnNextMission.textContent = 'Siguiente Misión'; DOM.btnNextMission.onclick = () => this.startNewGame(appState.currentLevelIndex); }
-                    }
+                    
+                    if (isCorrect) { this.handleCorrectAnswer(); } 
+                    else { this.handleIncorrectAnswer(); }
+                    
+                    document.querySelectorAll('.typewriter-effect').forEach(el => el.removeAttribute('data-typed'));
                     UIManager.goToScreen('screen-result');
+                },
+                handleCorrectAnswer() {
+                    DOM.resultScreen.className = `screen active success`;
+                    DOM.resultIcon.innerHTML = RESULT_ICONS.success;
+                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
+                    DOM.resultExplanation.style.display = 'none';
+                    DOM.resultTitle.textContent = '¡CORRECTO!';
+                    let stateWasModified = false, unlockedNewLevel = false, earnedResource = null;
+
+                    if (appState.gameMode === 'infinite') {
+                        appState.infiniteStreak++;
+                        this.startNewGame('infinite');
+                        return;
+                    }
+
+                    const level = appState.levels[appState.currentLevelIndex];
+                    if (level.wins < WINS_TO_UNLOCK) { level.wins++; stateWasModified = true; }
+                    
+                    const starsEarned = appState.currentAttempts === 1 ? 3 : (appState.currentAttempts === 2 ? 2 : 1);
+                    if (starsEarned > level.stars) {
+                        level.stars = starsEarned;
+                        stateWasModified = true;
+                        if (starsEarned === 3 && !level.rewardGiven) {
+                            level.rewardGiven = true;
+                            const resources = ['scanTotal', 'isolateItem'];
+                            const resourceType = resources[getRandomInt(0, resources.length - 1)];
+                            appState.tacticalResources[resourceType]++;
+                            earnedResource = resourceType.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+                        }
+                    }
+
+                    if (level.wins >= WINS_TO_UNLOCK && appState.currentLevelIndex < appState.levels.length - 1) {
+                        const nextLevel = appState.levels[appState.currentLevelIndex + 1];
+                        if (!nextLevel.unlocked) { nextLevel.unlocked = true; unlockedNewLevel = true; stateWasModified = true; }
+                    }
+
+                    if (stateWasModified) saveState();
+
+                    let unlockMsgText = '';
+                    if (unlockedNewLevel) unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`;
+                    if (earnedResource) unlockMsgText += `\nRECURSO OBTENIDO: [${earnedResource}]`;
+                    DOM.unlockMessage.textContent = unlockMsgText;
+                    if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
+
+                    if (level.wins >= WINS_TO_UNLOCK) {
+                        DOM.btnNextMission.textContent = 'Ir a Niveles';
+                        DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
+                    } else {
+                        DOM.btnNextMission.textContent = 'Siguiente Misión';
+                        DOM.btnNextMission.onclick = () => this.startNewGame(appState.currentLevelIndex);
+                    }
+                },
+                handleIncorrectAnswer() {
+                    DOM.resultScreen.className = `screen active failure`;
+                    DOM.resultIcon.innerHTML = RESULT_ICONS.failure;
+                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
+                    UIManager.triggerAnimation(DOM.gameScreen, 'hud-error-flash');
+                    
+                    if (appState.gameMode === 'infinite') {
+                        DOM.resultTitle.textContent = 'RACHA TERMINADA';
+                        DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`;
+                        DOM.btnNextMission.textContent = 'Volver al Menú';
+                        DOM.btnNextMission.onclick = () => { appState.infiniteStreak = 0; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
+                        appState.infiniteStreak = 0;
+                        return;
+                    }
+
+                    appState.lives--;
+                    appState.currentAttempts++;
+                    this.updateHUD();
+                    saveState();
+
+                    if (appState.lives > 0) {
+                        DOM.resultTitle.textContent = 'CASI...';
+                        DOM.unlockMessage.textContent = `Te quedan ${appState.lives} ${appState.lives === 1 ? 'intento' : 'intentos'}.`;
+                        DOM.resultExplanation.style.display = 'block';
+                        DOM.btnNextMission.textContent = 'Intentar de Nuevo';
+                        DOM.btnNextMission.onclick = () => {
+                            appState.userAnswer = '';
+                            UIManager.updateAnswerDisplay();
+                            UIManager.goToScreen('screen-game');
+                        };
+                    } else {
+                        const level = appState.levels[appState.currentLevelIndex];
+                        level.wins = 0; // Penalty!
+                        saveState();
+                        DOM.resultTitle.textContent = 'MISIÓN FALLIDA';
+                        DOM.unlockMessage.textContent = 'Has agotado tus intentos.\nTu racha de victorias para este nivel ha sido reiniciada.';
+                        DOM.resultExplanation.style.display = 'block';
+                        DOM.btnNextMission.textContent = 'Volver a Niveles';
+                        DOM.btnNextMission.onclick = () => {
+                            UIManager.renderLevelSelect();
+                            UIManager.goToScreen('screen-level-select');
+                        };
+                    }
                 }
             };
             const TacticalManager = {
                 useScan() {
-                    if (appState.tacticalResources.scanTotal <= 0) return;
+                    if (appState.tacticalResources.scanTotal <= 0 || DOM.btnScan.classList.contains('used-in-mission')) return;
                     appState.tacticalResources.scanTotal--; saveState();
-                    const scanResultEl = document.createElement('div'); scanResultEl.id = 'scan-result-display'; scanResultEl.textContent = `Costo Total Escaneado: ${appState.currentProblem.totalCost} Bs.`;
-                    DOM.problemContainer.appendChild(scanResultEl); UIManager.triggerAnimation(scanResultEl, 'pop-in');
-                    DOM.btnScan.disabled = true; DOM.btnScan.classList.add('used-in-mission'); UIManager.updateTacticalHUD();
+                    DOM.btnScan.classList.add('used-in-mission');
+                    GameManager.renderProblem();
+                    const scanResultEl = DOM.problemContainer.querySelector('#scan-result-display');
+                    if(scanResultEl) UIManager.triggerAnimation(scanResultEl, 'pop-in');
+                    UIManager.updateTacticalHUD();
                 },
                 useIsolate() {
-                    if (appState.tacticalResources.isolateItem <= 0 || appState.currentProblem.items.length < 2) return;
+                    if (appState.tacticalResources.isolateItem <= 0 || appState.currentProblem.items.length < 2 || DOM.btnIsolate.classList.contains('used-in-mission')) return;
                     appState.tacticalResources.isolateItem--; saveState();
                     let mostExpensiveItem = null; let maxPrice = -1;
                     appState.currentProblem.items.forEach(item => { if (item.totalPrice > maxPrice && !item.isolated) { maxPrice = item.totalPrice; mostExpensiveItem = item; } });
@@ -376,7 +532,7 @@
                         appState.currentProblem.answer = appState.currentProblem.payment - newTotalCost;
                         GameManager.renderProblem();
                     }
-                    DOM.btnIsolate.disabled = true; DOM.btnIsolate.classList.add('used-in-mission'); UIManager.updateTacticalHUD();
+                    DOM.btnIsolate.classList.add('used-in-mission'); UIManager.updateTacticalHUD();
                 }
             };
             const VirtualKeyboard = {
@@ -402,7 +558,13 @@
                     else { UIManager.goToScreen('screen-name'); }
                 });
                 DOM.btnChangeName.addEventListener('click', () => {
-                    if (window.confirm("¿Estás seguro? Al cambiar de nombre, se reiniciará todo tu progreso.")) {
+                    if (window.confirm("¿Estás seguro? Cambiar tu nombre reiniciará TODO tu progreso (niveles, estrellas y recursos). Esta acción es irreversible.")) {
+                        localStorage.removeItem(SAVE_KEY);
+                        location.reload();
+                    }
+                });
+                DOM.btnResetProgress.addEventListener('click', () => {
+                    if (window.confirm("¿Estás seguro de que quieres reiniciar TODO tu progreso? Esta acción no se puede deshacer.")) {
                         localStorage.removeItem(SAVE_KEY);
                         location.reload();
                     }
@@ -410,67 +572,74 @@
                 DOM.keyboardContainer.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) VirtualKeyboard.handleKeyPress(keyEl.dataset.key); });
                 DOM.levelSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.level-btn'); if (btn && !btn.disabled) GameManager.startNewGame(parseInt(btn.dataset.levelIndex)); });
                 DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); });
-                window.addEventListener('resize', UIManager.checkAndSetLayoutMode);
+                window.addEventListener('resize', () => {
+                    if (activeScreenId === 'screen-level-select') UIManager.checkAndSetLayoutMode();
+                    if (activeScreenId === 'screen-game') GameManager.renderProblem();
+                });
                 DOM.btnProfile.innerHTML = ICONS.PROFILE;
                 DOM.btnProfile.addEventListener('click', () => { UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); });
                 DOM.btnBackToLevels.addEventListener('click', () => UIManager.goToScreen('screen-level-select'));
                 DOM.btnInfiniteMode.addEventListener('click', () => GameManager.startNewGame('infinite'));
-                DOM.btnResetProgress.addEventListener('click', () => { if(window.confirm("¿Estás seguro de que quieres reiniciar todo tu progreso? Esta acción no se puede deshacer.")){ localStorage.removeItem(SAVE_KEY); location.reload(); } });
                 DOM.btnScan.addEventListener('click', TacticalManager.useScan);
                 DOM.btnIsolate.addEventListener('click', TacticalManager.useIsolate);
-                window.addEventListener('keydown', handlePhysicalKeyboard);
+                document.addEventListener('keydown', handlePhysicalKeyboard);
             }
             function handlePhysicalKeyboard(e) {
-                const activeScreen = document.querySelector('.screen.active');
-                if (!activeScreen) return;
-                
-                const key = e.key;
-                let targetKeyElement;
-
-                if (activeScreen.id === 'screen-name') {
-                    if (key.length === 1 && key.match(/[a-zñ]/i)) {
-                        VirtualKeyboard.handleKeyPress(key.toLowerCase());
-                        targetKeyElement = DOM.keyboardContainer.querySelector(`[data-key='${key.toLowerCase()}']`);
-                    } else if (key === 'Enter') {
-                        VirtualKeyboard.handleKeyPress('✓');
-                        targetKeyElement = document.getElementById('name-confirm-key');
-                    } else if (key === 'Backspace') {
+                if (activeScreenId === 'screen-name') {
+                    e.preventDefault();
+                    if (e.key.match(/^[a-zA-ZñÑ]$/)) {
+                        const key = e.key.toLowerCase();
+                        if (e.shiftKey !== appState.isShiftActive) VirtualKeyboard.toggleShift();
+                        VirtualKeyboard.handleKeyPress(key);
+                        flashKeyFeedback(`#keyboard-container .key[data-key="${key}"]`);
+                    } else if (e.key === 'Backspace') {
                         VirtualKeyboard.handleKeyPress('BACKSPACE');
-                        targetKeyElement = DOM.keyboardContainer.querySelector(`[data-key='BACKSPACE']`);
-                    } else if (key === 'Shift') {
-                        appState.isShiftActive = e.getModifierState("Shift") || e.getModifierState("CapsLock");
-                        VirtualKeyboard.updateKeys();
+                        flashKeyFeedback(`#keyboard-container .key[data-key="BACKSPACE"]`);
+                    } else if (e.key === 'Enter') {
+                        VirtualKeyboard.handleKeyPress('✓');
+                        flashKeyFeedback('#name-confirm-key');
                     }
-                } else if (activeScreen.id === 'screen-game') {
-                    if (key.match(/[0-9]/)) {
-                        Numpad.handleKeyPress(key);
-                        targetKeyElement = DOM.numpadGrid.querySelector(`[data-key='${key}']`);
-                    } else if (key === 'Enter') {
-                        Numpad.handleKeyPress('ENTER');
-                        targetKeyElement = document.getElementById('numpad-enter');
-                    } else if (key === 'Backspace') {
+                } else if (activeScreenId === 'screen-game') {
+                    e.preventDefault();
+                    if (e.key.match(/^[0-9]$/)) {
+                        Numpad.handleKeyPress(e.key);
+                        flashKeyFeedback(`#numpad-grid .key[data-key="${e.key}"]`);
+                    } else if (e.key === 'Backspace' || e.key.toLowerCase() === 'c') {
                         Numpad.handleKeyPress('C');
-                        targetKeyElement = DOM.numpadGrid.querySelector(`[data-key='C']`);
+                        flashKeyFeedback(`#numpad-grid .key[data-key="C"]`);
+                    } else if (e.key === 'Enter') {
+                        Numpad.handleKeyPress('ENTER');
+                        flashKeyFeedback('#numpad-enter');
                     }
-                } else if (activeScreen.id === 'screen-title' && key === 'Enter') {
-                    DOM.btnStart.click();
-                } else if (activeScreen.id === 'screen-result' && key === 'Enter') {
-                    DOM.btnNextMission.click();
-                }
-                
-                if (targetKeyElement) {
-                    targetKeyElement.classList.add('key-active');
-                    setTimeout(() => targetKeyElement.classList.remove('key-active'), 150);
                 }
             }
+            function flashKeyFeedback(selector) {
+                const keyEl = document.querySelector(selector);
+                if (keyEl) UIManager.triggerAnimation(keyEl, 'key-flash');
+            }
+            function typewriter(element, text, speed = 50, callback = () => {}) {
+                let i = 0;
+                element.textContent = '';
+                function type() {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    } else {
+                        if (callback) callback();
+                    }
+                }
+                type();
+            }
             function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-            function requestFullscreen(element) { if (document.fullscreenElement) return; if (element.requestFullscreen) element.requestFullscreen().catch(err => {}); else if (element.mozRequestFullScreen) element.mozRequestFullScreen(); else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen(); else if (element.msRequestFullscreen) element.msRequestFullscreen(); }
+            function requestFullscreen(element) { try { if (document.fullscreenElement) return; if (element.requestFullscreen) element.requestFullscreen().catch(err => {}); else if (element.mozRequestFullScreen) element.mozRequestFullScreen(); else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen(); else if (element.msRequestFullscreen) element.msRequestFullscreen(); } catch (e) { console.warn("Fullscreen request was denied or failed."); } }
             function init() {
                 loadState(); 
                 generateSessionPriceList();
                 VirtualKeyboard.init(); Numpad.init(); setupEventListeners();
-                DOM.biosScreen.style.animation = 'bios-glitch 0.2s 2.5s';
-                setTimeout(() => { UIManager.goToScreen('screen-title'); }, 2800);
+                typewriter(DOM.biosText, 'INICIANDO SISTEMA...', 75, () => {
+                    setTimeout(() => UIManager.goToScreen('screen-title'), 500);
+                });
             }
             init();
         });

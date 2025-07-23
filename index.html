@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Misión Supermercado v1.3</title>
+    <title>Misión Supermercado v1.6</title>
     <style>
         :root {
             --color-bg: #1a1a1d;
@@ -27,10 +27,8 @@
         html, body { width: 100vw; height: 100vh; overflow: hidden; font-family: var(--font-main); background-color: var(--color-bg); color: var(--color-text); }
         #app-container { position: relative; width: 100%; height: 100%; }
 
-        @keyframes draw { to { stroke-dashoffset: 0; } }
         @keyframes pop-in { 0% { opacity: 0; transform: scale(0.7); } 80% { opacity: 1; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes flash-confirm { 0% { box-shadow: 0 0 15px 5px rgba(0, 246, 255, 0.4); } 100% { box-shadow: none; } }
-        @keyframes flash-red-anim { 0% { border-color: var(--color-error); } 100% { border-color: var(--color-disabled-text); } }
         @keyframes heart-beat { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
         @keyframes scanline-anim { 0% { transform: translateY(0%); } 100% { transform: translateY(-50%); } }
         @keyframes pulse-glow { 0% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } 50% { box-shadow: 0 0 16px rgba(0, 246, 255, 0.4); } 100% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } }
@@ -115,10 +113,6 @@
         #hud-right { display: flex; align-items: center; gap: 10px; }
         #hud-lives { display: flex; gap: 5px; font-size: 1.5rem; color: var(--color-error); }
         #hud-lives .life.lost { opacity: 0.3; }
-        #hud-tactical { display: flex; gap: 5px; }
-        .tactical-btn { background-color: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-surface-light); font-family: var(--font-main); font-size: 0.8rem; padding: 5px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .tactical-btn:hover:not(:disabled) { background-color: var(--color-surface-light); border-color: var(--color-primary); color: var(--color-primary); }
-        .tactical-btn:disabled { background-color: var(--color-disabled-bg); color: var(--color-disabled-text); cursor: not-allowed; opacity: 0.7; border-color: transparent; }
         #hud-wins-tracker { display: flex; gap: 4px; }
         .win-dot { width: 10px; height: 10px; border: 2px solid var(--color-disabled-text); border-radius: 3px; }
         .win-dot.filled { background-color: var(--color-primary); border-color: var(--color-primary); }
@@ -127,16 +121,20 @@
         #problem-container { background-color: var(--color-surface); flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; width: 100%; max-width: 700px; }
         .problem-title { font-size: 1.2em; font-weight: bold; text-align: left; }
         .problem-item-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px dashed var(--color-bg); }
-        .problem-item-list.as-rows { flex-direction: column; }
-        .problem-item-row { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
 
-        .product-card { display: flex; flex-direction: column; align-items: center; background-color: var(--color-bg); padding: 10px; border-radius: var(--border-radius-main); gap: 5px; transition: opacity 0.3s; width: 90px; }
-        .product-card.isolated { opacity: 0.4; text-decoration: line-through; }
+        .product-card { position: relative; display: flex; flex-direction: column; align-items: center; background-color: var(--color-bg); padding: 10px; border-radius: var(--border-radius-main); gap: 5px; transition: all 0.3s; width: 90px; }
+        .product-card.defective { opacity: 0.3; transform: rotate(-5deg); }
+        .product-card::after { position: absolute; top: -5px; right: -5px; background-color: var(--color-error); color: var(--color-bg); padding: 3px 6px; font-size: 0.8rem; border-radius: 8px; font-weight: bold; opacity: 0; transition: opacity 0.3s; }
+        .product-card.free::after { content: 'GRATIS'; opacity: 1; }
+        .product-card.doubled::after { content: 'x2'; opacity: 1; background-color: var(--color-primary); }
         .product-emoji-container { font-size: 2.8em; line-height: 1; display: flex; font-family: var(--font-system); }
         .product-price { font-weight: bold; font-size: 1.1em; white-space: nowrap; }
+        
         .problem-payment, .problem-question { font-size: 1.1em; text-align: left; }
         .problem-question { font-weight: bold; margin-top: 5px; }
-        #scan-result-display { color: var(--color-primary); font-weight: bold; margin-top: 10px; }
+        #coupon-indicator { display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--color-bg); padding: 8px; margin-top: 10px; border-radius: var(--border-radius-main); font-size: 1rem; color: var(--color-primary); }
+        #coupon-indicator svg { width: 24px; height: 24px; fill: var(--color-primary); }
+        
         #answer-display { width: 100%; max-width: 350px; margin: 0 auto; height: 55px; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; color: var(--color-primary); background-color: var(--color-bg); border: 1px solid var(--color-surface-light); border-radius: var(--border-radius-main); display: flex; align-items: center; justify-content: center; }
         #numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 350px; margin: 0 auto; }
         #numpad-grid .key { height: 55px; font-size: 2rem; font-weight: 600; }
@@ -154,16 +152,28 @@
         
         #profile-stats { display: flex; gap: 40px; font-size: 1.5rem; text-align: center; }
         .stat-value { font-size: 3rem; font-weight: bold; color: var(--color-primary); }
+
+        #anomaly-alert { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(26, 26, 29, 0.95); z-index: 10000; display: none; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        #anomaly-alert-content { border: 2px solid var(--color-error); padding: 30px; border-radius: var(--border-radius-main); box-shadow: 0 0 20px rgba(255, 0, 160, 0.3); max-width: 600px; }
+        #anomaly-alert-title { color: var(--color-error); font-size: clamp(1.5rem, 5vw, 2.5rem); margin-bottom: 15px; }
+        #anomaly-alert-message { font-size: clamp(1.1rem, 4vw, 1.8rem); line-height: 1.4; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        #anomaly-alert-message svg { width: clamp(40px, 10vw, 60px); height: auto; fill: var(--color-error); }
     </style>
 </head>
 <body>
     <div id="app-container">
         <div id="scanline-overlay"></div>
+        <div id="anomaly-alert">
+            <div id="anomaly-alert-content">
+                <h1 id="anomaly-alert-title"></h1>
+                <div id="anomaly-alert-message"></div>
+            </div>
+        </div>
         <div id="screen-bios" class="screen active"> <div class="screen-content-wrapper"> <svg viewBox="0 0 100 100" id="bios-logo"> <path d="M10 90 L20 90 L25 40 L80 40 L85 70 L60 70 L55 80 L90 80 M25 40 L30 20 L45 20 L50 40" stroke="#0F0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="35" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/><circle cx="70" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/> </svg><p id="bios-text"></p> </div> </div>
         <div id="screen-title" class="screen"> <div class="screen-content-wrapper"> <h1 class="title typewriter-effect">Misión Supermercado</h1> <h2 class="subtitle">Un juego de matemáticas</h2> <button id="btn-start" class="btn">INICIAR</button> </div> </div>
         <div id="screen-name" class="screen"> <div class="screen-content-wrapper"> <h2 class="subtitle typewriter-effect">Introduce tu nombre</h2> <div id="name-display" class="display-panel">_</div> <div id="keyboard-container"></div> </div> </div>
         <div id="screen-level-select" class="screen"> <div class="screen-content-wrapper"> <div id="level-select-header"><h2 id="level-select-greeting" class="subtitle typewriter-effect"></h2><button id="btn-profile"></button></div> <div id="level-select-grid"></div> <div id="level-select-buttons"><button id="btn-infinite-mode" class="btn">Turno del Experto ♾️</button> <button id="btn-change-name" class="btn btn-secondary btn-small">Cambiar Nombre</button></div> </div> </div>
-        <div id="screen-game" class="screen"> <div id="scroll-content"> <div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-lives"></div><div id="hud-tactical"><button id="btn-scan" class="tactical-btn" disabled>SCAN</button><button id="btn-isolate" class="tactical-btn" disabled>ISOLATE</button><button id="btn-firewall" class="tactical-btn" disabled>FIREWALL</button></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div> <div id="problem-container" class="display-panel"></div> </div> <div id="action-bar"> <div id="answer-display">_</div> <div id="numpad-grid"></div> </div> </div>
+        <div id="screen-game" class="screen"> <div id="scroll-content"> <div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-lives"></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div> <div id="problem-container" class="display-panel"></div> </div> <div id="action-bar"> <div id="answer-display">_</div> <div id="numpad-grid"></div> </div> </div>
         <div id="screen-result" class="screen"> <div class="screen-content-wrapper"> <svg id="result-icon" viewBox="0 0 100 100"></svg> <h1 id="result-title" class="title typewriter-effect"></h1> <p id="unlock-message"></p> <p id="result-explanation"></p> <button id="btn-next-mission" class="btn"></button> </div> </div>
         <div id="screen-profile" class="screen"> <div class="screen-content-wrapper"> <h1 class="title typewriter-effect">Progreso del Jugador</h1> <h2 id="profile-player-name" class="subtitle"></h2> <div id="profile-stats"> <div><div class="stat-value"><span id="profile-total-stars">0</span>/30</div><div>Estrellas</div></div> <div><div class="stat-value"><span id="profile-mastered-levels">0</span>/10</div><div>Niveles Dominados</div></div> </div> <button id="btn-back-to-levels" class="btn">Volver a Niveles</button><button id="btn-reset-progress" class="btn btn-danger btn-small">Reiniciar Progreso</button> </div> </div>
     </div>
@@ -171,26 +181,28 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const WINS_TO_UNLOCK = 5;
-            const SAVE_KEY = 'missionSupermarketSaveData';
+            const SAVE_KEY = 'missionSupermarketSaveData_v1_6';
+            const ANOMALY_BASE_CHANCE = 0.25;
+            const ANOMALY_CHANCE_INCREASE = 0.10;
             let activeScreenId = 'screen-bios';
             const appState = { 
-                playerName: '', isShiftActive: false, gameMode: 'campaign', currentLevelIndex: null, lives: 3, currentAttempts: 1, infiniteStreak: 0, 
-                levels: Array(10).fill(null).map((_, i) => ({ unlocked: i === 0, wins: 0, stars: 0, rewardGiven: false })),
-                tacticalResources: { scanTotal: 0, isolateItem: 0, firewall: 0 },
+                playerName: '', isShiftActive: false, gameMode: 'campaign', currentLevelIndex: null, lives: 3, currentAttempts: 1, infiniteStreak: 0, currentAnomaly: null, anomalyChance: ANOMALY_BASE_CHANCE,
+                levels: Array(10).fill(null).map((_, i) => ({ unlocked: i === 0, wins: 0, stars: 0 })),
                 sessionPriceList: {},
                 currentProblem: null
             };
             const DOM = {
-                appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), hudTactical: document.getElementById('hud-tactical'), scrollContent: document.getElementById('scroll-content'), actionBar: document.getElementById('action-bar'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), numpadEnter: null, btnResetProgress: document.getElementById('btn-reset-progress'), btnScan: document.getElementById('btn-scan'), btnIsolate: document.getElementById('btn-isolate'), btnFirewall: document.getElementById('btn-firewall'), levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper'), biosText: document.getElementById('bios-text'),
+                appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), numpadEnter: null, btnResetProgress: document.getElementById('btn-reset-progress'), levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper'), biosText: document.getElementById('bios-text'),
+                anomalyAlert: document.getElementById('anomaly-alert'), anomalyAlertTitle: document.getElementById('anomaly-alert-title'), anomalyAlertMessage: document.getElementById('anomaly-alert-message'),
             };
-            const ICONS = { SHIFT: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`, BACKSPACE: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M22 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.79 13.21L15.5 14.5l-2.29-2.29L10.92 14.5 9.5 13.08l2.29-2.29L9.5 8.5l1.42-1.42 2.29 2.29L15.5 7.08l1.42 1.42-2.29 2.29L17.21 13.08l-1.42 1.42z"/></svg>`, CHECK: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`, CLEAR: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`, PROFILE: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, ENTER: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>` };
+            const ICONS = { SHIFT: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`, BACKSPACE: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M22 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.79 13.21L15.5 14.5l-2.29-2.29L10.92 14.5 9.5 13.08l2.29-2.29L9.5 8.5l1.42-1.42 2.29 2.29L15.5 7.08l1.42 1.42-2.29 2.29L17.21 13.08l-1.42 1.42z"/></svg>`, CHECK: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`, CLEAR: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`, PROFILE: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, ENTER: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>`, COUPON: `<svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3s-3 1.34-3 3c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 12H6v-2h7v2zm3-4H6v-2h10v2zm0-4H6V8h10v2z"/></svg>` };
             const THEMED_PRODUCTS = { fruits: [ { name: 'Manzana', emoji: '🍎', priceRange: [1, 3] }, { name: 'Banana', emoji: '🍌', priceRange: [1, 2] }, { name: 'Naranja', emoji: '🍊', priceRange: [2, 4] }, { name: 'Uva', emoji: '🍇', priceRange: [5, 8] }, { name: 'Fresa', emoji: '🍓', priceRange: [4, 6] }, { name: 'Piña', emoji: '🍍', priceRange: [10, 15] }, { name: 'Cereza', emoji: '🍒', priceRange: [6, 9] }, { name: 'Sandía', emoji: '🍉', priceRange: [12, 18] }, { name: 'Pera', emoji: '🍐', priceRange: [2, 4] }, { name: 'Limón', emoji: '🍋', priceRange: [1, 2] } ], vegetables: [ { name: 'Brócoli', emoji: '🥦', priceRange: [5, 8] }, { name: 'Zanahoria', emoji: '🥕', priceRange: [1, 3] }, { name: 'Tomate', emoji: '🍅', priceRange: [2, 4] }, { name: 'Papa', emoji: '🥔', priceRange: [1, 2] }, { name: 'Maíz', emoji: '🌽', priceRange: [3, 5] }, { name: 'Berenjena', emoji: '🍆', priceRange: [4, 6] }, { name: 'Lechuga', emoji: '🥬', priceRange: [3, 5] }, { name: 'Cebolla', emoji: '🧅', priceRange: [1, 3] }, { name: 'Pimiento', emoji: '🫑', priceRange: [2, 4] }, { name: 'Ajo', emoji: '🧄', priceRange: [1, 2] } ], bakery: [ { name: 'Pan', emoji: '🍞', priceRange: [2, 5] }, { name: 'Galleta', emoji: '🍪', priceRange: [2, 4] }, { name: 'Dona', emoji: '🍩', priceRange: [4, 6] }, { name: 'Pastel', emoji: '🍰', priceRange: [20, 30] }, { name: 'Croissant', emoji: '🥐', priceRange: [5, 8] }, { name: 'Baguette', emoji: '🥖', priceRange: [6, 10] }, { name: 'Pretzel', emoji: '🥨', priceRange: [4, 7] }, { name: 'Cupcake', emoji: '🧁', priceRange: [8, 12] }, { name: 'Waffle', emoji: '🧇', priceRange: [10, 15] }, { name: 'Tarta', emoji: '🥧', priceRange: [15, 25] } ], dairy: [ { name: 'Leche', emoji: '🥛', priceRange: [5, 8] }, { name: 'Queso', emoji: '🧀', priceRange: [10, 15] }, { name: 'Yogur', emoji: '🍦', priceRange: [3, 6] }, { name: 'Huevo', emoji: '🥚', priceRange: [1, 2] }, { name: 'Mantequilla', emoji: '🧈', priceRange: [8, 12] }, { name: 'Helado', emoji: '🍨', priceRange: [15, 20] }, { name: 'Crema', emoji: '🍶', priceRange: [7, 10] }, { name: 'Batido', emoji: '🥤', priceRange: [12,16] }, { name: 'Requesón', emoji: '🧀', priceRange: [9,13] }, { name: 'Nata', emoji: '🍥', priceRange: [8,11] } ], pantry: [ { name: 'Arroz', emoji: '🍚', priceRange: [8, 12] }, { name: 'Fideos', emoji: '🍝', priceRange: [6, 9] }, { name: 'Atún', emoji: '🥫', priceRange: [7, 10] }, { name: 'Aceite', emoji: '🏺', priceRange: [15, 20] }, { name: 'Sal', emoji: '🧂', priceRange: [3, 5] }, { name: 'Miel', emoji: '🍯', priceRange: [12, 18] }, { name: 'Mostaza', emoji: '🌭', priceRange: [8, 11] }, { name: 'Harina', emoji: '🌾', priceRange: [5, 8] }, { name: 'Azúcar', emoji: '🍬', priceRange: [6, 9] }, { name: 'Café', emoji: '☕', priceRange: [18, 25] } ], drinks: [ { name: 'Jugo', emoji: '🧃', priceRange: [4, 7] }, { name: 'Agua', emoji: '💧', priceRange: [3, 5] }, { name: 'Gaseosa', emoji: '🥤', priceRange: [6, 9] }, { name: 'Té', emoji: '🍵', priceRange: [10, 15] }, { name: 'Limonada', emoji: '🍋', priceRange: [8,12] }, { name: 'Vino', emoji: '🍷', priceRange: [25,35] }, { name: 'Cerveza', emoji: '🍺', priceRange: [10,15] }, { name: 'Coctel', emoji: '🍸', priceRange: [15,20] }, { name: 'Whisky', emoji: '🥃', priceRange: [50,70] }, { name: 'Ginebra', emoji: '🍸', priceRange: [45,65] } ], meats: [ { name: 'Pollo', emoji: '🍗', priceRange: [20, 30] }, { name: 'Carne', emoji: '🥩', priceRange: [30, 40] }, { name: 'Salchicha', emoji: '🌭', priceRange: [2, 4] }, { name: 'Jamón', emoji: '🍖', priceRange: [15, 20] }, { name: 'Pescado', emoji: '🐟', priceRange: [25, 35] }, { name: 'Bacon', emoji: '🥓', priceRange: [18,25] }, { name: 'Camarón', emoji: '🍤', priceRange: [35,45] }, { name: 'Cangrejo', emoji: '🦀', priceRange: [40,50] }, { name: 'Costilla', emoji: '🍖', priceRange: [28,38] }, { name: 'Pavo', emoji: '🦃', priceRange: [50,60] } ], snacks: [ { name: 'Chocolate', emoji: '🍫', priceRange: [8, 12] }, { name: 'Papas Fritas', emoji: '🍟', priceRange: [5, 8] }, { name: 'Palomitas', emoji: '🍿', priceRange: [6, 10] }, { name: 'Maní', emoji: '🥜', priceRange: [4, 7] }, { name: 'Rosquilla', emoji: '🍩', priceRange: [5,9] }, { name: 'Sushi', emoji: '🍣', priceRange: [15,25] }, { name: 'Taco', emoji: '🌮', priceRange: [12,18] }, { name: 'Pizza', emoji: '🍕', priceRange: [30,40] }, { name: 'Hamburguesa', emoji: '🍔', priceRange: [20,30] }, { name: 'Hotdog', emoji: '🌭', priceRange: [15,22] } ], cleaning: [ { name: 'Jabón', emoji: '🧼', priceRange: [5, 8] }, { name: 'Champú', emoji: '🧴', priceRange: [15, 20] }, { name: 'Detergente', emoji: '✨', priceRange: [18, 25] }, { name: 'Esponja', emoji: '🧽', priceRange: [3, 6] }, { name: 'Papel Hig.', emoji: '🧻', priceRange: [12, 18] }, { name: 'Cepillo', emoji: '🧹', priceRange: [8,12] }, { name: 'Pasta D.', emoji: '😁', priceRange: [10,15] }, { name: 'Rastrillo', emoji: '🔪', priceRange: [7,11] }, { name: 'Escoba', emoji: '🧹', priceRange: [20,30] }, { name: 'Cubo', emoji: '🗑️', priceRange: [25,35] } ], };
             const LEVEL_THEMES = [ 'fruits', 'vegetables', 'bakery', 'dairy', 'pantry', 'drinks', 'meats', 'snacks', 'cleaning', 'all' ];
             const LEVEL_CONFIG = [ { name: 'Fácil', minItems: 2, maxItems: 3, scenarios: ['total_cost'] }, { name: 'Fácil', minItems: 2, maxItems: 4, scenarios: ['total_cost', 'single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 4, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 5, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 4, maxItems: 5, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 4, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 7, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Experto', minItems: 6, maxItems: 8, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Súper Hard', minItems: 7, maxItems: 10, scenarios: ['single_bill', 'multi_bill'] }, ];
             const RESULT_ICONS = { success: `<path d="M38.7,80.2L12.2,53.7c-1.6-1.6-1.6-4.1,0-5.7l5.7-5.7c1.6-1.6,4.1-1.6,5.7,0L38.7,58l32-32c1.6-1.6,4.1-1.6,5.7,0l5.7,5.7c1.6,1.6,1.6,4.1,0,5.7L44.3,80.2C42.8,81.8,40.2,81.8,38.7,80.2z"/>`, failure: `<path d="M80.2,74.5L61.3,55.6l18.9-18.9c-1.6-1.6-1.6-4.1,0-5.7l-5.7-5.7c-1.6-1.6-4.1-1.6-5.7,0L50,44.3L31.1,25.5c-1.6-1.6-4.1-1.6-5.7,0l-5.7,5.7c-1.6,1.6-1.6,4.1,0,5.7l18.9,18.9L19.8,74.5c-1.6-1.6-1.6,4.1,0,5.7l5.7,5.7c1.6,1.6,4.1,1.6,5.7,0l18.9-18.9l18.9,18.9c1.6,1.6,4.1,1.6,5.7,0l5.7-5.7C81.8,78.6,81.8,76,80.2,74.5z"/>` };
             
             function saveState() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(appState)); } catch (e) { console.error("Failed to save state:", e); } }
-            function loadState() { try { const savedData = localStorage.getItem(SAVE_KEY); if (savedData) { const parsedData = JSON.parse(savedData); if (parsedData) { appState.playerName = parsedData.playerName || ''; if (Array.isArray(parsedData.levels) && parsedData.levels.length === appState.levels.length) { appState.levels = parsedData.levels; } appState.tacticalResources = parsedData.tacticalResources || { scanTotal: 0, isolateItem: 0, firewall: 0 }; } } } catch (e) { console.error("Could not load save data. Starting fresh.", e); localStorage.removeItem(SAVE_KEY); } }
+            function loadState() { try { const savedData = localStorage.getItem(SAVE_KEY); if (savedData) { const parsedData = JSON.parse(savedData); if (parsedData) { appState.playerName = parsedData.playerName || ''; appState.anomalyChance = parsedData.anomalyChance || ANOMALY_BASE_CHANCE; if (Array.isArray(parsedData.levels) && parsedData.levels.length === appState.levels.length) { appState.levels = parsedData.levels; } } } } catch (e) { console.error("Could not load save data. Starting fresh.", e); localStorage.removeItem(SAVE_KEY); } }
             
             const UIManager = {
                 goToScreen(screenId) { 
@@ -204,6 +216,16 @@
                     if (screenId === 'screen-game') { setTimeout(this.adjustGameLayout, 50); }
                     if (screenId === 'screen-level-select') { this.checkAndSetLayoutMode(); }
                 },
+                showAnomalyAlert(title, message, callback) {
+                    DOM.anomalyAlertTitle.textContent = `// ${title} //`;
+                    DOM.anomalyAlertMessage.innerHTML = message;
+                    DOM.anomalyAlert.style.display = 'flex';
+                    UIManager.triggerAnimation(DOM.anomalyAlert.querySelector('#anomaly-alert-content'), 'pop-in');
+                    setTimeout(() => {
+                        DOM.anomalyAlert.style.display = 'none';
+                        if (callback) callback();
+                    }, 3500);
+                },
                 applyTypewriterEffect(screen) {
                     const element = screen.querySelector('.typewriter-effect');
                     if (element && !element.hasAttribute('data-typed')) {
@@ -216,7 +238,7 @@
                         });
                     }
                 },
-                adjustGameLayout() { if (DOM.actionBar) { const availableHeight = window.innerHeight - DOM.actionBar.offsetHeight; DOM.scrollContent.style.maxHeight = `${availableHeight}px`; } },
+                adjustGameLayout() { if (DOM.problemContainer) { const availableHeight = window.innerHeight - document.getElementById('action-bar').offsetHeight - document.getElementById('game-hud').offsetHeight - 40; DOM.problemContainer.style.maxHeight = `${availableHeight}px`; } },
                 checkAndSetLayoutMode() {
                     setTimeout(() => {
                         DOM.levelSelectGrid.classList.remove('list-mode', 'grid-mode');
@@ -239,25 +261,23 @@
                         btn.innerHTML = `<div class="level-info-wrapper"><div class="level-title">Nivel ${index + 1}</div><div class="level-theme">${theme.charAt(0).toUpperCase() + theme.slice(1)}</div></div><div class="level-status-wrapper"><div class="level-stars">${starsHTML}</div><span class="level-icon">${allWins ? '🏆' : (level.unlocked ? '✅' : '🔒')}</span></div>`;
                         DOM.levelSelectGrid.appendChild(btn);
                     });
-                    const lastLevelMastered = appState.levels[9].stars === 3;
+                    const lastLevelMastered = appState.levels.length > 0 && appState.levels[appState.levels.length - 1].stars === 3;
                     DOM.btnInfiniteMode.style.display = lastLevelMastered ? 'block' : 'none';
                     this.checkAndSetLayoutMode();
                 },
                 renderProfile() { DOM.profilePlayerName.textContent = appState.playerName; const totalStars = appState.levels.reduce((sum, level) => sum + level.stars, 0); const masteredLevels = appState.levels.filter(level => level.stars === 3).length; DOM.profileTotalStars.textContent = totalStars; DOM.profileMasteredLevels.textContent = masteredLevels; },
                 updateNameDisplay() { DOM.nameDisplay.textContent = appState.playerName || '_'; document.getElementById('name-confirm-key').classList.toggle('disabled', appState.playerName.length === 0); },
                 updateAnswerDisplay() { const canConfirm = appState.userAnswer.length > 0; DOM.answerDisplay.textContent = appState.userAnswer || '_'; if(DOM.numpadEnter) DOM.numpadEnter.classList.toggle('disabled', !canConfirm); },
-                triggerAnimation(element, animationClass) { if(element) { element.classList.remove(animationClass); void element.offsetWidth; element.classList.add(animationClass); } },
-                updateTacticalHUD() {
-                    DOM.btnScan.textContent = `SCAN [${appState.tacticalResources.scanTotal}]`; DOM.btnIsolate.textContent = `ISOLATE [${appState.tacticalResources.isolateItem}]`; DOM.btnFirewall.textContent = `FIREWALL [${appState.tacticalResources.firewall}]`;
-                    DOM.btnScan.disabled = appState.tacticalResources.scanTotal === 0 || DOM.btnScan.classList.contains('used-in-mission'); DOM.btnIsolate.disabled = appState.tacticalResources.isolateItem === 0 || DOM.btnIsolate.classList.contains('used-in-mission'); DOM.btnFirewall.disabled = true; 
-                }
+                triggerAnimation(element, animationClass) { if(element) { element.classList.remove(animationClass); void element.offsetWidth; element.classList.add(animationClass); } }
             };
 
             const GameManager = {
                 _createProductCard(item) {
                     const itemEl = document.createElement('div');
                     itemEl.className = 'product-card';
-                    if (item.isolated) itemEl.classList.add('isolated');
+                    if (item.isDefective) itemEl.classList.add('defective');
+                    if (item.isFree) itemEl.classList.add('free');
+                    if (item.isDoubled) itemEl.classList.add('doubled');
 
                     const emojiContainer = document.createElement('div');
                     emojiContainer.className = 'product-emoji-container';
@@ -265,7 +285,7 @@
 
                     const priceEl = document.createElement('div');
                     priceEl.className = 'product-price';
-                    priceEl.textContent = `${item.totalPrice} Bs.`;
+                    priceEl.textContent = `${item.price} Bs.`;
 
                     itemEl.appendChild(emojiContainer);
                     itemEl.appendChild(priceEl);
@@ -275,22 +295,27 @@
                     appState.userAnswer = ''; 
                     if (levelIndexOrMode === 'infinite') { 
                         appState.gameMode = 'infinite';
-                        DOM.hudTactical.style.display = 'none';
                     } else { 
                         appState.gameMode = 'campaign'; 
                         appState.currentLevelIndex = levelIndexOrMode;
                         appState.lives = 3;
                         appState.currentAttempts = 1;
-                        DOM.hudTactical.style.display = 'flex';
-                        DOM.btnScan.classList.remove('used-in-mission'); 
-                        DOM.btnIsolate.classList.remove('used-in-mission'); 
-                        UIManager.updateTacticalHUD();
                     } 
                     this.generateProblem(); 
-                    this.renderProblem(); 
-                    this.updateHUD(); 
-                    UIManager.updateAnswerDisplay(); 
-                    UIManager.goToScreen('screen-game'); 
+                    
+                    if (appState.currentAnomaly) {
+                        UIManager.showAnomalyAlert(appState.currentAnomaly.title, appState.currentAnomaly.message, () => {
+                            this.renderProblem(); 
+                            this.updateHUD(); 
+                            UIManager.updateAnswerDisplay();
+                            UIManager.goToScreen('screen-game');
+                        });
+                    } else {
+                        this.renderProblem(); 
+                        this.updateHUD(); 
+                        UIManager.updateAnswerDisplay(); 
+                        UIManager.goToScreen('screen-game');
+                    }
                 },
                 updateHUD() {
                     DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; 
@@ -325,11 +350,88 @@
                         }
                     }
                 },
-                generateProblem() { 
-                    const items = this.generateItems(); const totalCost = items.reduce((sum, item) => sum + item.totalPrice, 0); 
-                    const { payment, paymentText, change, questionText, titleText } = this.generatePaymentAndQuestion(totalCost); 
-                    const explanation = `Costo Total: ${items.map(i => `${i.price} Bs`).join(' + ')} = ${totalCost} Bs.\n` + (payment !== totalCost ? `Pago: ${payment} Bs.\nCambio: ${payment} Bs - ${totalCost} Bs = ${change} Bs.` : 'Pagaste exacto.'); 
-                    appState.currentProblem = { items, totalCost, payment, paymentText, questionText, titleText, answer: change, explanation }; 
+                generateProblem() {
+                    appState.currentAnomaly = null;
+                    let items = this.generateItems();
+                    
+                    if(appState.gameMode === 'campaign' && Math.random() < appState.anomalyChance) {
+                       this.applyAnomaly(items);
+                       appState.anomalyChance = ANOMALY_BASE_CHANCE; // Reset chance
+                    } else if (appState.gameMode === 'campaign') {
+                       appState.anomalyChance += ANOMALY_CHANCE_INCREASE; // Increase chance for next time
+                    }
+                    saveState();
+                    
+                    const validItems = items.filter(item => !item.isDefective);
+                    let baseTotalCost = validItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                    let finalTotalCost = baseTotalCost;
+                    
+                    if(appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
+                        finalTotalCost -= appState.currentAnomaly.value;
+                        if (finalTotalCost < 0) finalTotalCost = 0;
+                    }
+
+                    const { payment, paymentText, change, questionText, titleText, scenario } = this.generatePaymentAndQuestion(finalTotalCost); 
+                    const explanation = this.generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario});
+                    
+                    appState.currentProblem = { items, totalCost: finalTotalCost, payment, paymentText, questionText, titleText, answer: change, explanation, scenario }; 
+                },
+                applyAnomaly(items) {
+                    const possibleAnomalies = ['coupon', 'double', 'defective', 'free_expensive'];
+                    const anomalyType = possibleAnomalies[getRandomInt(0, possibleAnomalies.length - 1)];
+
+                    switch(anomalyType) {
+                        case 'coupon':
+                            const couponValue = 5;
+                            appState.currentAnomaly = { type: 'coupon', value: couponValue, title: '¡QUÉ SUERTE!', message: `${ICONS.COUPON}<span>Has encontrado un cupón de ${couponValue} Bs. de descuento.</span>` };
+                            break;
+                        case 'double':
+                            const itemToDouble = items[getRandomInt(0, items.length - 1)];
+                            itemToDouble.isDoubled = true;
+                            itemToDouble.totalPrice = itemToDouble.price * 2;
+                            appState.currentAnomaly = { type: 'double', item: itemToDouble, title: '¡CUIDADO!', message: `<span>El precio de la <b>${itemToDouble.name}</b> hoy es el doble.</span>` };
+                            break;
+                        case 'defective':
+                             if (items.length > 2) {
+                                const itemToMark = items[getRandomInt(0, items.length - 1)];
+                                itemToMark.isDefective = true;
+                                itemToMark.totalPrice = 0;
+                                appState.currentAnomaly = { type: 'defective', item: itemToMark, title: '¡ATENCIÓN!', message: `<span>El artículo <b>${itemToMark.name}</b> está en mal estado. ¡No puedes comprarlo!</span>` };
+                            }
+                            break;
+                        case 'free_expensive':
+                            if (items.length > 1) {
+                                let expensiveItem = items.reduce((max, item) => item.price > max.price ? item : max, items[0]);
+                                expensiveItem.isFree = true;
+                                expensiveItem.totalPrice = 0;
+                                appState.currentAnomaly = { type: 'free_expensive', item: expensiveItem, title: '¡DÍA DE SUERTE!', message: `<span>¡El artículo más caro, <b>${expensiveItem.name}</b>, es GRATIS!</span>` };
+                            }
+                            break;
+                    }
+                },
+                generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario}) {
+                    let explanation = "Cálculo de la compra:\n";
+                    const validItems = items.filter(i => !i.isDefective);
+                    explanation += validItems.map(i => {
+                        if (i.isFree) return `${i.name}: ${i.price} Bs. (GRATIS, se suma 0)`;
+                        if (i.isDoubled) return `${i.name}: ${i.price} x 2 = ${i.totalPrice} Bs.`;
+                        return `${i.name}: ${i.price} Bs.`;
+                    }).join('\n');
+                    
+                    explanation += `\n-----------------------\n`;
+
+                    if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
+                        explanation += `Suma de Productos: ${baseTotalCost} Bs.\n`;
+                        explanation += `Descuento del Cupón: -${appState.currentAnomaly.value} Bs.\n`;
+                        explanation += `Costo Final: ${baseTotalCost} - ${appState.currentAnomaly.value} = ${finalTotalCost} Bs.`;
+                    } else {
+                         explanation += (scenario === 'total_cost') ? `Coste Total: ${finalTotalCost} Bs.` : `Suma de Productos: ${finalTotalCost} Bs.`;
+                    }
+                    
+                    if(scenario !== 'total_cost'){
+                         explanation += `\n\nPago con billete de: ${payment} Bs.\nCambio: ${payment} - ${finalTotalCost} = ${change} Bs.`;
+                    }
+                    return explanation;
                 },
                 renderProblem() {
                     if(!appState.currentProblem) return;
@@ -343,33 +445,8 @@
 
                     const itemListEl = document.createElement('div');
                     itemListEl.className = 'problem-item-list';
-
-                    const isMobile = window.innerWidth < 768;
-                    const itemCount = items.length;
-
-                    if (isMobile && itemCount >= 4 && itemCount <= 10) {
-                        itemListEl.classList.add('as-rows');
-                        let rowsDefinition;
-                        switch (itemCount) { case 4: rowsDefinition = [2, 2]; break; case 5: rowsDefinition = [3, 2]; break; case 6: rowsDefinition = [3, 3]; break; case 7: rowsDefinition = [4, 3]; break; case 8: rowsDefinition = [4, 4]; break; case 9: rowsDefinition = [5, 4]; break; case 10: rowsDefinition = [5, 5]; break; default: rowsDefinition = [itemCount]; }
-                        let itemIndex = 0;
-                        if(rowsDefinition) {
-                            rowsDefinition.forEach(countInRow => {
-                                const rowEl = document.createElement('div');
-                                rowEl.className = 'problem-item-row';
-                                for (let i = 0; i < countInRow; i++) {
-                                    if(items[itemIndex]) rowEl.appendChild(this._createProductCard(items[itemIndex++]));
-                                }
-                                itemListEl.appendChild(rowEl);
-                            });
-                        }
-                    } else {
-                        items.forEach(item => { itemListEl.appendChild(this._createProductCard(item)); });
-                    }
-
+                    items.forEach(item => { itemListEl.appendChild(this._createProductCard(item)); });
                     DOM.problemContainer.appendChild(itemListEl);
-                    
-                    const scanResultEl = DOM.problemContainer.querySelector('#scan-result-display');
-                    if(scanResultEl) DOM.problemContainer.removeChild(scanResultEl);
 
                     if (paymentText) {
                         const paymentEl = document.createElement('div');
@@ -377,37 +454,61 @@
                         paymentEl.textContent = paymentText;
                         DOM.problemContainer.appendChild(paymentEl);
                     }
+                    
+                    const couponIndicator = document.createElement('div');
+                    couponIndicator.id = 'coupon-indicator';
+                    couponIndicator.style.display = (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') ? 'flex' : 'none';
+                    couponIndicator.innerHTML = `${ICONS.COUPON} Cupón Activo`;
+                    DOM.problemContainer.appendChild(couponIndicator);
+
 
                     const questionEl = document.createElement('div');
                     questionEl.className = 'problem-question';
                     questionEl.textContent = questionText;
                     DOM.problemContainer.appendChild(questionEl);
-                    
-                    if (DOM.btnScan.classList.contains('used-in-mission')) {
-                        const scanResultDisplay = document.createElement('div');
-                        scanResultDisplay.id = 'scan-result-display';
-                        scanResultDisplay.textContent = `Costo Total Escaneado: ${appState.currentProblem.totalCost} Bs.`;
-                        DOM.problemContainer.appendChild(scanResultDisplay);
-                    }
                 },
                 generateItems() {
                     let config, availableProducts;
                     if (appState.gameMode === 'infinite') { config = LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)]; const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; }
                     else { config = LEVEL_CONFIG[appState.currentLevelIndex]; const theme = LEVEL_THEMES[appState.currentLevelIndex] || 'all'; if (theme !== 'all' && THEMED_PRODUCTS[theme]) { availableProducts = [...THEMED_PRODUCTS[theme]]; } else { const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; } }
                     let numItems = getRandomInt(config.minItems, config.maxItems); let selectedProducts = [];
-                    for (let i = 0; i < numItems; i++) { let productIndex = getRandomInt(0, availableProducts.length - 1); selectedProducts.push(availableProducts[productIndex]); }
-                    return selectedProducts.map(product => { const price = appState.sessionPriceList[product.name]; return { ...product, quantity: 1, price, totalPrice: price, isolated: false }; }).sort((a, b) => b.totalPrice - a.totalPrice);
+                    for (let i = 0; i < numItems; i++) { let productIndex = getRandomInt(0, availableProducts.length - 1); selectedProducts.push(JSON.parse(JSON.stringify(availableProducts[productIndex]))); }
+                    return selectedProducts.map(product => { const price = appState.sessionPriceList[product.name]; product.price = price; product.totalPrice = price; return product; }).sort((a, b) => b.price - a.price);
                 },
                 generatePaymentAndQuestion(totalCost) {
-                    const config = (appState.gameMode === 'infinite') ? LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)] : LEVEL_CONFIG[appState.currentLevelIndex]; const chosenScenario = config.scenarios[getRandomInt(0, config.scenarios.length - 1)]; const bills = [10, 20, 50, 100, 200]; let payment = 0, paymentText = '', change = 0, questionText = '';
-                    if (chosenScenario === 'total_cost' || totalCost < 5) { payment = totalCost; change = totalCost; questionText = '¿Cuánto debes pagar en total?'; }
-                    else { let initialPayment = 0; if (chosenScenario === 'single_bill') { initialPayment = bills.find(b => b > totalCost) || (totalCost + 10); } else if (chosenScenario === 'multi_bill') { let baseBill = [10, 20, 5].find(b => b * 2 > totalCost) || 10; initialPayment = baseBill * 2; } payment = initialPayment; while (payment <= totalCost) { payment = (bills.find(b => b > payment) || payment + 10); } change = payment - totalCost; questionText = '¿Cuánto cambio deben darte?'; if (chosenScenario === 'multi_bill' && payment % 2 === 0 && payment > 0) paymentText = `Pagas con dos billetes de ${payment/2} Bs.`; else paymentText = `Pagas con un billete de ${payment} Bs.`; }
+                    const config = (appState.gameMode === 'infinite') ? LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)] : LEVEL_CONFIG[appState.currentLevelIndex];
+                    const scenario = config.scenarios[getRandomInt(0, config.scenarios.length - 1)];
+                    const bills = [10, 20, 50, 100, 200]; 
+                    let payment = 0, paymentText = '', change = 0, questionText = '';
+                    
+                    if (scenario === 'total_cost' || totalCost < 5) {
+                        payment = totalCost;
+                        change = totalCost; 
+                        questionText = '¿Cuánto debes pagar en total?';
+                    } else { 
+                        let initialPayment = 0; 
+                        if (scenario === 'single_bill') { 
+                            initialPayment = bills.find(b => b > totalCost) || (Math.ceil(totalCost / 10) * 10); 
+                        } else if (scenario === 'multi_bill') { 
+                            let baseBill = [10, 20, 5].find(b => b * 2 > totalCost) || 10; initialPayment = baseBill * 2; 
+                        } 
+                        payment = initialPayment; 
+                        while (payment <= totalCost) { 
+                            payment = (bills.find(b => b > payment) || payment + 10); 
+                        } 
+                        change = payment - totalCost; 
+                        questionText = '¿Cuánto cambio deben darte?'; 
+                        if (scenario === 'multi_bill' && payment % 2 === 0 && payment > 20) {
+                            paymentText = `Pagas con dos billetes de ${payment/2} Bs.`; 
+                        } else {
+                            paymentText = `Pagas con un billete de ${payment} Bs.`; 
+                        }
+                    }
                     const titles = ["🛒 Tu Ticket de Compra:", "📋 Misión de Compras:", "📝 Lista del Supermercado:"];
-                    return { payment, paymentText, change, questionText, titleText: titles[getRandomInt(0, titles.length - 1)] };
+                    return { payment, paymentText, change, questionText, titleText: titles[getRandomInt(0, titles.length - 1)], scenario };
                 },
                 checkAnswer() {
                     const isCorrect = parseInt(appState.userAnswer) === appState.currentProblem.answer;
-                    DOM.resultExplanation.textContent = `La respuesta correcta es ${appState.currentProblem.answer} Bs.\n\n${appState.currentProblem.explanation}`;
                     
                     if (isCorrect) { this.handleCorrectAnswer(); } 
                     else { this.handleIncorrectAnswer(); }
@@ -419,9 +520,9 @@
                     DOM.resultScreen.className = `screen active success`;
                     DOM.resultIcon.innerHTML = RESULT_ICONS.success;
                     UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
-                    DOM.resultExplanation.style.display = 'none';
+                    DOM.resultExplanation.style.display = 'block';
                     DOM.resultTitle.textContent = '¡CORRECTO!';
-                    let stateWasModified = false, unlockedNewLevel = false, earnedResource = null;
+                    let stateWasModified = false, unlockedNewLevel = false;
 
                     if (appState.gameMode === 'infinite') {
                         appState.infiniteStreak++;
@@ -436,13 +537,6 @@
                     if (starsEarned > level.stars) {
                         level.stars = starsEarned;
                         stateWasModified = true;
-                        if (starsEarned === 3 && !level.rewardGiven) {
-                            level.rewardGiven = true;
-                            const resources = ['scanTotal', 'isolateItem'];
-                            const resourceType = resources[getRandomInt(0, resources.length - 1)];
-                            appState.tacticalResources[resourceType]++;
-                            earnedResource = resourceType.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
-                        }
                     }
 
                     if (level.wins >= WINS_TO_UNLOCK && appState.currentLevelIndex < appState.levels.length - 1) {
@@ -454,9 +548,10 @@
 
                     let unlockMsgText = '';
                     if (unlockedNewLevel) unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`;
-                    if (earnedResource) unlockMsgText += `\nRECURSO OBTENIDO: [${earnedResource}]`;
+                    
                     DOM.unlockMessage.textContent = unlockMsgText;
                     if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
+                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
 
                     if (level.wins >= WINS_TO_UNLOCK) {
                         DOM.btnNextMission.textContent = 'Ir a Niveles';
@@ -471,7 +566,9 @@
                     DOM.resultIcon.innerHTML = RESULT_ICONS.failure;
                     UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
                     UIManager.triggerAnimation(DOM.gameScreen, 'hud-error-flash');
-                    
+                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
+                    DOM.resultExplanation.style.display = 'block';
+
                     if (appState.gameMode === 'infinite') {
                         DOM.resultTitle.textContent = 'RACHA TERMINADA';
                         DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`;
@@ -489,7 +586,6 @@
                     if (appState.lives > 0) {
                         DOM.resultTitle.textContent = 'CASI...';
                         DOM.unlockMessage.textContent = `Te quedan ${appState.lives} ${appState.lives === 1 ? 'intento' : 'intentos'}.`;
-                        DOM.resultExplanation.style.display = 'block';
                         DOM.btnNextMission.textContent = 'Intentar de Nuevo';
                         DOM.btnNextMission.onclick = () => {
                             appState.userAnswer = '';
@@ -498,41 +594,16 @@
                         };
                     } else {
                         const level = appState.levels[appState.currentLevelIndex];
-                        level.wins = 0; // Penalty!
+                        level.wins = 0;
                         saveState();
                         DOM.resultTitle.textContent = 'MISIÓN FALLIDA';
                         DOM.unlockMessage.textContent = 'Has agotado tus intentos.\nTu racha de victorias para este nivel ha sido reiniciada.';
-                        DOM.resultExplanation.style.display = 'block';
                         DOM.btnNextMission.textContent = 'Volver a Niveles';
                         DOM.btnNextMission.onclick = () => {
                             UIManager.renderLevelSelect();
                             UIManager.goToScreen('screen-level-select');
                         };
                     }
-                }
-            };
-            const TacticalManager = {
-                useScan() {
-                    if (appState.tacticalResources.scanTotal <= 0 || DOM.btnScan.classList.contains('used-in-mission')) return;
-                    appState.tacticalResources.scanTotal--; saveState();
-                    DOM.btnScan.classList.add('used-in-mission');
-                    GameManager.renderProblem();
-                    const scanResultEl = DOM.problemContainer.querySelector('#scan-result-display');
-                    if(scanResultEl) UIManager.triggerAnimation(scanResultEl, 'pop-in');
-                    UIManager.updateTacticalHUD();
-                },
-                useIsolate() {
-                    if (appState.tacticalResources.isolateItem <= 0 || appState.currentProblem.items.length < 2 || DOM.btnIsolate.classList.contains('used-in-mission')) return;
-                    appState.tacticalResources.isolateItem--; saveState();
-                    let mostExpensiveItem = null; let maxPrice = -1;
-                    appState.currentProblem.items.forEach(item => { if (item.totalPrice > maxPrice && !item.isolated) { maxPrice = item.totalPrice; mostExpensiveItem = item; } });
-                    if (mostExpensiveItem) {
-                        mostExpensiveItem.isolated = true;
-                        const newTotalCost = appState.currentProblem.items.filter(i => !i.isolated).reduce((sum, i) => sum + i.totalPrice, 0);
-                        appState.currentProblem.answer = appState.currentProblem.payment - newTotalCost;
-                        GameManager.renderProblem();
-                    }
-                    DOM.btnIsolate.classList.add('used-in-mission'); UIManager.updateTacticalHUD();
                 }
             };
             const VirtualKeyboard = {
@@ -558,7 +629,7 @@
                     else { UIManager.goToScreen('screen-name'); }
                 });
                 DOM.btnChangeName.addEventListener('click', () => {
-                    if (window.confirm("¿Estás seguro? Cambiar tu nombre reiniciará TODO tu progreso (niveles, estrellas y recursos). Esta acción es irreversible.")) {
+                    if (window.confirm("¿Estás seguro? Cambiar tu nombre reiniciará TODO tu progreso (niveles y estrellas). Esta acción es irreversible.")) {
                         localStorage.removeItem(SAVE_KEY);
                         location.reload();
                     }
@@ -574,14 +645,12 @@
                 DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); });
                 window.addEventListener('resize', () => {
                     if (activeScreenId === 'screen-level-select') UIManager.checkAndSetLayoutMode();
-                    if (activeScreenId === 'screen-game') GameManager.renderProblem();
+                    if (activeScreenId === 'screen-game') UIManager.adjustGameLayout();
                 });
                 DOM.btnProfile.innerHTML = ICONS.PROFILE;
                 DOM.btnProfile.addEventListener('click', () => { UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); });
                 DOM.btnBackToLevels.addEventListener('click', () => UIManager.goToScreen('screen-level-select'));
                 DOM.btnInfiniteMode.addEventListener('click', () => GameManager.startNewGame('infinite'));
-                DOM.btnScan.addEventListener('click', TacticalManager.useScan);
-                DOM.btnIsolate.addEventListener('click', TacticalManager.useIsolate);
                 document.addEventListener('keydown', handlePhysicalKeyboard);
             }
             function handlePhysicalKeyboard(e) {
@@ -637,7 +706,7 @@
                 loadState(); 
                 generateSessionPriceList();
                 VirtualKeyboard.init(); Numpad.init(); setupEventListeners();
-                typewriter(DOM.biosText, 'INICIANDO SISTEMA...', 75, () => {
+                typewriter(DOM.biosText, 'CARGANDO SISTEMA v1.6...', 75, () => {
                     setTimeout(() => UIManager.goToScreen('screen-title'), 500);
                 });
             }

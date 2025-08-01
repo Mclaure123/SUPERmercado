@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Misión Supermercado v1.6</title>
+    <title>Misión Supermercado v1.7</title>
     <style>
         :root {
             --color-bg: #1a1a1d;
@@ -116,6 +116,7 @@
         #hud-wins-tracker { display: flex; gap: 4px; }
         .win-dot { width: 10px; height: 10px; border: 2px solid var(--color-disabled-text); border-radius: 3px; }
         .win-dot.filled { background-color: var(--color-primary); border-color: var(--color-primary); }
+        .win-dot.checkpoint { background-color: var(--color-disabled-text); border-color: var(--color-surface-light); }
         .hud-error-flash #hud-lives .life:last-of-type { animation: heart-beat 0.5s ease-in-out; }
         #hud-difficulty, #hud-streak { font-weight: bold; padding: 4px 10px; border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); }
         #problem-container { background-color: var(--color-surface); flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; width: 100%; max-width: 700px; }
@@ -180,21 +181,40 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const WINS_TO_UNLOCK = 5;
-            const SAVE_KEY = 'missionSupermarketSaveData_v1_6';
+            const WINS_TO_UNLOCK = 7;
+            const CHECKPOINT = 4;
+            const SAVE_KEY = 'missionSupermarketSaveData_v1_7';
             const ANOMALY_BASE_CHANCE = 0.25;
             const ANOMALY_CHANCE_INCREASE = 0.10;
+            const COUPON_VALUES = [2, 3, 5, 10];
+            
             let activeScreenId = 'screen-bios';
+            
             const appState = { 
-                playerName: '', isShiftActive: false, gameMode: 'campaign', currentLevelIndex: null, lives: 3, currentAttempts: 1, infiniteStreak: 0, currentAnomaly: null, anomalyChance: ANOMALY_BASE_CHANCE,
-                levels: Array(10).fill(null).map((_, i) => ({ unlocked: i === 0, wins: 0, stars: 0 })),
+                playerName: '', 
+                isShiftActive: false, 
+                gameMode: 'campaign', 
+                currentLevelIndex: null, 
+                levelLives: 3, 
+                missionAttempts: 1, 
+                infiniteStreak: 0, 
+                currentAnomaly: null, 
+                anomalyChance: ANOMALY_BASE_CHANCE,
+                levels: Array(10).fill(null).map((_, i) => ({ 
+                    unlocked: i === 0, 
+                    wins: 0, 
+                    stars: 0,
+                    checkpointReached: false
+                })),
                 sessionPriceList: {},
                 currentProblem: null
             };
+
             const DOM = {
                 appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), numpadEnter: null, btnResetProgress: document.getElementById('btn-reset-progress'), levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper'), biosText: document.getElementById('bios-text'),
                 anomalyAlert: document.getElementById('anomaly-alert'), anomalyAlertTitle: document.getElementById('anomaly-alert-title'), anomalyAlertMessage: document.getElementById('anomaly-alert-message'),
             };
+
             const ICONS = { SHIFT: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`, BACKSPACE: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M22 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.79 13.21L15.5 14.5l-2.29-2.29L10.92 14.5 9.5 13.08l2.29-2.29L9.5 8.5l1.42-1.42 2.29 2.29L15.5 7.08l1.42 1.42-2.29 2.29L17.21 13.08l-1.42 1.42z"/></svg>`, CHECK: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`, CLEAR: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`, PROFILE: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, ENTER: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>`, COUPON: `<svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3s-3 1.34-3 3c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 12H6v-2h7v2zm3-4H6v-2h10v2zm0-4H6V8h10v2z"/></svg>` };
             const THEMED_PRODUCTS = { fruits: [ { name: 'Manzana', emoji: '🍎', priceRange: [1, 3] }, { name: 'Banana', emoji: '🍌', priceRange: [1, 2] }, { name: 'Naranja', emoji: '🍊', priceRange: [2, 4] }, { name: 'Uva', emoji: '🍇', priceRange: [5, 8] }, { name: 'Fresa', emoji: '🍓', priceRange: [4, 6] }, { name: 'Piña', emoji: '🍍', priceRange: [10, 15] }, { name: 'Cereza', emoji: '🍒', priceRange: [6, 9] }, { name: 'Sandía', emoji: '🍉', priceRange: [12, 18] }, { name: 'Pera', emoji: '🍐', priceRange: [2, 4] }, { name: 'Limón', emoji: '🍋', priceRange: [1, 2] } ], vegetables: [ { name: 'Brócoli', emoji: '🥦', priceRange: [5, 8] }, { name: 'Zanahoria', emoji: '🥕', priceRange: [1, 3] }, { name: 'Tomate', emoji: '🍅', priceRange: [2, 4] }, { name: 'Papa', emoji: '🥔', priceRange: [1, 2] }, { name: 'Maíz', emoji: '🌽', priceRange: [3, 5] }, { name: 'Berenjena', emoji: '🍆', priceRange: [4, 6] }, { name: 'Lechuga', emoji: '🥬', priceRange: [3, 5] }, { name: 'Cebolla', emoji: '🧅', priceRange: [1, 3] }, { name: 'Pimiento', emoji: '🫑', priceRange: [2, 4] }, { name: 'Ajo', emoji: '🧄', priceRange: [1, 2] } ], bakery: [ { name: 'Pan', emoji: '🍞', priceRange: [2, 5] }, { name: 'Galleta', emoji: '🍪', priceRange: [2, 4] }, { name: 'Dona', emoji: '🍩', priceRange: [4, 6] }, { name: 'Pastel', emoji: '🍰', priceRange: [20, 30] }, { name: 'Croissant', emoji: '🥐', priceRange: [5, 8] }, { name: 'Baguette', emoji: '🥖', priceRange: [6, 10] }, { name: 'Pretzel', emoji: '🥨', priceRange: [4, 7] }, { name: 'Cupcake', emoji: '🧁', priceRange: [8, 12] }, { name: 'Waffle', emoji: '🧇', priceRange: [10, 15] }, { name: 'Tarta', emoji: '🥧', priceRange: [15, 25] } ], dairy: [ { name: 'Leche', emoji: '🥛', priceRange: [5, 8] }, { name: 'Queso', emoji: '🧀', priceRange: [10, 15] }, { name: 'Yogur', emoji: '🍦', priceRange: [3, 6] }, { name: 'Huevo', emoji: '🥚', priceRange: [1, 2] }, { name: 'Mantequilla', emoji: '🧈', priceRange: [8, 12] }, { name: 'Helado', emoji: '🍨', priceRange: [15, 20] }, { name: 'Crema', emoji: '🍶', priceRange: [7, 10] }, { name: 'Batido', emoji: '🥤', priceRange: [12,16] }, { name: 'Requesón', emoji: '🧀', priceRange: [9,13] }, { name: 'Nata', emoji: '🍥', priceRange: [8,11] } ], pantry: [ { name: 'Arroz', emoji: '🍚', priceRange: [8, 12] }, { name: 'Fideos', emoji: '🍝', priceRange: [6, 9] }, { name: 'Atún', emoji: '🥫', priceRange: [7, 10] }, { name: 'Aceite', emoji: '🏺', priceRange: [15, 20] }, { name: 'Sal', emoji: '🧂', priceRange: [3, 5] }, { name: 'Miel', emoji: '🍯', priceRange: [12, 18] }, { name: 'Mostaza', emoji: '🌭', priceRange: [8, 11] }, { name: 'Harina', emoji: '🌾', priceRange: [5, 8] }, { name: 'Azúcar', emoji: '🍬', priceRange: [6, 9] }, { name: 'Café', emoji: '☕', priceRange: [18, 25] } ], drinks: [ { name: 'Jugo', emoji: '🧃', priceRange: [4, 7] }, { name: 'Agua', emoji: '💧', priceRange: [3, 5] }, { name: 'Gaseosa', emoji: '🥤', priceRange: [6, 9] }, { name: 'Té', emoji: '🍵', priceRange: [10, 15] }, { name: 'Limonada', emoji: '🍋', priceRange: [8,12] }, { name: 'Vino', emoji: '🍷', priceRange: [25,35] }, { name: 'Cerveza', emoji: '🍺', priceRange: [10,15] }, { name: 'Coctel', emoji: '🍸', priceRange: [15,20] }, { name: 'Whisky', emoji: '🥃', priceRange: [50,70] }, { name: 'Ginebra', emoji: '🍸', priceRange: [45,65] } ], meats: [ { name: 'Pollo', emoji: '🍗', priceRange: [20, 30] }, { name: 'Carne', emoji: '🥩', priceRange: [30, 40] }, { name: 'Salchicha', emoji: '🌭', priceRange: [2, 4] }, { name: 'Jamón', emoji: '🍖', priceRange: [15, 20] }, { name: 'Pescado', emoji: '🐟', priceRange: [25, 35] }, { name: 'Bacon', emoji: '🥓', priceRange: [18,25] }, { name: 'Camarón', emoji: '🍤', priceRange: [35,45] }, { name: 'Cangrejo', emoji: '🦀', priceRange: [40,50] }, { name: 'Costilla', emoji: '🍖', priceRange: [28,38] }, { name: 'Pavo', emoji: '🦃', priceRange: [50,60] } ], snacks: [ { name: 'Chocolate', emoji: '🍫', priceRange: [8, 12] }, { name: 'Papas Fritas', emoji: '🍟', priceRange: [5, 8] }, { name: 'Palomitas', emoji: '🍿', priceRange: [6, 10] }, { name: 'Maní', emoji: '🥜', priceRange: [4, 7] }, { name: 'Rosquilla', emoji: '🍩', priceRange: [5,9] }, { name: 'Sushi', emoji: '🍣', priceRange: [15,25] }, { name: 'Taco', emoji: '🌮', priceRange: [12,18] }, { name: 'Pizza', emoji: '🍕', priceRange: [30,40] }, { name: 'Hamburguesa', emoji: '🍔', priceRange: [20,30] }, { name: 'Hotdog', emoji: '🌭', priceRange: [15,22] } ], cleaning: [ { name: 'Jabón', emoji: '🧼', priceRange: [5, 8] }, { name: 'Champú', emoji: '🧴', priceRange: [15, 20] }, { name: 'Detergente', emoji: '✨', priceRange: [18, 25] }, { name: 'Esponja', emoji: '🧽', priceRange: [3, 6] }, { name: 'Papel Hig.', emoji: '🧻', priceRange: [12, 18] }, { name: 'Cepillo', emoji: '🧹', priceRange: [8,12] }, { name: 'Pasta D.', emoji: '😁', priceRange: [10,15] }, { name: 'Rastrillo', emoji: '🔪', priceRange: [7,11] }, { name: 'Escoba', emoji: '🧹', priceRange: [20,30] }, { name: 'Cubo', emoji: '🗑️', priceRange: [25,35] } ], };
             const LEVEL_THEMES = [ 'fruits', 'vegetables', 'bakery', 'dairy', 'pantry', 'drinks', 'meats', 'snacks', 'cleaning', 'all' ];
@@ -256,9 +276,9 @@
                     appState.levels.forEach((level, index) => {
                         const btn = document.createElement('button'); btn.className = 'level-btn'; btn.dataset.levelIndex = index;
                         if (!level.unlocked) { btn.classList.add('locked'); btn.disabled = true; }
-                        const allWins = level.wins >= WINS_TO_UNLOCK; const theme = LEVEL_THEMES[index] || 'Mixta';
+                        const theme = LEVEL_THEMES[index] || 'Mixta';
                         const starsHTML = '⭐'.repeat(level.stars) + '☆'.repeat(3 - level.stars);
-                        btn.innerHTML = `<div class="level-info-wrapper"><div class="level-title">Nivel ${index + 1}</div><div class="level-theme">${theme.charAt(0).toUpperCase() + theme.slice(1)}</div></div><div class="level-status-wrapper"><div class="level-stars">${starsHTML}</div><span class="level-icon">${allWins ? '🏆' : (level.unlocked ? '✅' : '🔒')}</span></div>`;
+                        btn.innerHTML = `<div class="level-info-wrapper"><div class="level-title">Nivel ${index + 1}</div><div class="level-theme">${theme.charAt(0).toUpperCase() + theme.slice(1)}</div></div><div class="level-status-wrapper"><div class="level-stars">${starsHTML}</div><span class="level-icon">${level.wins >= WINS_TO_UNLOCK ? '🏆' : (level.unlocked ? '✅' : '🔒')}</span></div>`;
                         DOM.levelSelectGrid.appendChild(btn);
                     });
                     const lastLevelMastered = appState.levels.length > 0 && appState.levels[appState.levels.length - 1].stars === 3;
@@ -291,17 +311,10 @@
                     itemEl.appendChild(priceEl);
                     return itemEl;
                 },
-                startNewGame(levelIndexOrMode) { 
-                    appState.userAnswer = ''; 
-                    if (levelIndexOrMode === 'infinite') { 
-                        appState.gameMode = 'infinite';
-                    } else { 
-                        appState.gameMode = 'campaign'; 
-                        appState.currentLevelIndex = levelIndexOrMode;
-                        appState.lives = 3;
-                        appState.currentAttempts = 1;
-                    } 
-                    this.generateProblem(); 
+                startNewMission() {
+                    appState.userAnswer = '';
+                    appState.missionAttempts = 1;
+                    this.generateProblem();
                     
                     if (appState.currentAnomaly) {
                         UIManager.showAnomalyAlert(appState.currentAnomaly.title, appState.currentAnomaly.message, () => {
@@ -317,6 +330,17 @@
                         UIManager.goToScreen('screen-game');
                     }
                 },
+                startLevelAttempt(levelIndex) {
+                    appState.currentLevelIndex = levelIndex;
+                    appState.gameMode = 'campaign';
+                    appState.levelLives = 3;
+                    this.startNewMission();
+                },
+                startInfiniteGame() {
+                    appState.gameMode = 'infinite';
+                    appState.infiniteStreak = 0;
+                    this.startNewMission();
+                },
                 updateHUD() {
                     DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; 
                     DOM.hudStreak.style.display = 'none'; 
@@ -329,23 +353,26 @@
                         DOM.hudStreak.textContent = `Racha: ${appState.infiniteStreak}`; 
                         DOM.hudStreak.style.display = 'inline-block'; 
                     } else { 
+                        const level = appState.levels[appState.currentLevelIndex];
                         DOM.hudDifficulty.textContent = `Nivel ${appState.currentLevelIndex + 1}: ${LEVEL_CONFIG[appState.currentLevelIndex].name}`; 
                         
                         DOM.hudWinsTracker.style.display = 'flex'; 
                         DOM.hudWinsTracker.innerHTML = ''; 
                         for (let i = 0; i < WINS_TO_UNLOCK; i++) { 
                             const dot = document.createElement('div'); 
-                            dot.className = `win-dot ${i < appState.levels[appState.currentLevelIndex].wins ? 'filled' : ''}`; 
+                            dot.className = 'win-dot';
+                            if (i < level.wins) dot.classList.add('filled');
+                            if (level.checkpointReached && i < CHECKPOINT) dot.classList.add('checkpoint');
                             DOM.hudWinsTracker.appendChild(dot); 
                         }
 
                         DOM.hudLives.style.display = 'flex';
                         DOM.hudLives.innerHTML = '';
-                        for(let i=0; i < 3; i++){
+                        for(let i = 0; i < 3; i++){
                             const lifeEl = document.createElement('span');
                             lifeEl.className = 'life';
                             lifeEl.textContent = '❤️';
-                            if(i >= appState.lives) lifeEl.classList.add('lost');
+                            if(i >= appState.levelLives) lifeEl.classList.add('lost');
                             DOM.hudLives.appendChild(lifeEl);
                         }
                     }
@@ -356,14 +383,18 @@
                     
                     if(appState.gameMode === 'campaign' && Math.random() < appState.anomalyChance) {
                        this.applyAnomaly(items);
-                       appState.anomalyChance = ANOMALY_BASE_CHANCE; // Reset chance
+                       appState.anomalyChance = ANOMALY_BASE_CHANCE;
                     } else if (appState.gameMode === 'campaign') {
-                       appState.anomalyChance += ANOMALY_CHANCE_INCREASE; // Increase chance for next time
+                       appState.anomalyChance += ANOMALY_CHANCE_INCREASE;
                     }
                     saveState();
                     
-                    const validItems = items.filter(item => !item.isDefective);
-                    let baseTotalCost = validItems.reduce((sum, item) => sum + item.totalPrice, 0);
+                    items.forEach(item => {
+                        item.calculatedPrice = item.totalPrice;
+                        if(item.isFree || item.isDefective) item.calculatedPrice = 0;
+                    });
+                    
+                    let baseTotalCost = items.reduce((sum, item) => sum + item.calculatedPrice, 0);
                     let finalTotalCost = baseTotalCost;
                     
                     if(appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
@@ -382,7 +413,7 @@
 
                     switch(anomalyType) {
                         case 'coupon':
-                            const couponValue = 5;
+                            const couponValue = COUPON_VALUES[getRandomInt(0, COUPON_VALUES.length - 1)];
                             appState.currentAnomaly = { type: 'coupon', value: couponValue, title: '¡QUÉ SUERTE!', message: `${ICONS.COUPON}<span>Has encontrado un cupón de ${couponValue} Bs. de descuento.</span>` };
                             break;
                         case 'double':
@@ -411,8 +442,8 @@
                 },
                 generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario}) {
                     let explanation = "Cálculo de la compra:\n";
-                    const validItems = items.filter(i => !i.isDefective);
-                    explanation += validItems.map(i => {
+                    explanation += items.map(i => {
+                        if (i.isDefective) return `${i.name}: (DEFECTUOSO, no se suma)`;
                         if (i.isFree) return `${i.name}: ${i.price} Bs. (GRATIS, se suma 0)`;
                         if (i.isDoubled) return `${i.name}: ${i.price} x 2 = ${i.totalPrice} Bs.`;
                         return `${i.name}: ${i.price} Bs.`;
@@ -423,10 +454,9 @@
                     if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
                         explanation += `Suma de Productos: ${baseTotalCost} Bs.\n`;
                         explanation += `Descuento del Cupón: -${appState.currentAnomaly.value} Bs.\n`;
-                        explanation += `Costo Final: ${baseTotalCost} - ${appState.currentAnomaly.value} = ${finalTotalCost} Bs.`;
-                    } else {
-                         explanation += (scenario === 'total_cost') ? `Coste Total: ${finalTotalCost} Bs.` : `Suma de Productos: ${finalTotalCost} Bs.`;
                     }
+                    
+                    explanation += (scenario === 'total_cost') ? `Coste Total: ${finalTotalCost} Bs.` : `Suma Total: ${finalTotalCost} Bs.`;
                     
                     if(scenario !== 'total_cost'){
                          explanation += `\n\nPago con billete de: ${payment} Bs.\nCambio: ${payment} - ${finalTotalCost} = ${change} Bs.`;
@@ -457,8 +487,11 @@
                     
                     const couponIndicator = document.createElement('div');
                     couponIndicator.id = 'coupon-indicator';
-                    couponIndicator.style.display = (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') ? 'flex' : 'none';
-                    couponIndicator.innerHTML = `${ICONS.COUPON} Cupón Activo`;
+                    const coupon = appState.currentAnomaly && appState.currentAnomaly.type === 'coupon';
+                    couponIndicator.style.display = coupon ? 'flex' : 'none';
+                    if (coupon) {
+                        couponIndicator.innerHTML = `${ICONS.COUPON} Cupón (-${appState.currentAnomaly.value} Bs.)`;
+                    }
                     DOM.problemContainer.appendChild(couponIndicator);
 
 
@@ -522,44 +555,51 @@
                     UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
                     DOM.resultExplanation.style.display = 'block';
                     DOM.resultTitle.textContent = '¡CORRECTO!';
-                    let stateWasModified = false, unlockedNewLevel = false;
-
+                    
                     if (appState.gameMode === 'infinite') {
                         appState.infiniteStreak++;
-                        this.startNewGame('infinite');
-                        return;
-                    }
-
-                    const level = appState.levels[appState.currentLevelIndex];
-                    if (level.wins < WINS_TO_UNLOCK) { level.wins++; stateWasModified = true; }
-                    
-                    const starsEarned = appState.currentAttempts === 1 ? 3 : (appState.currentAttempts === 2 ? 2 : 1);
-                    if (starsEarned > level.stars) {
-                        level.stars = starsEarned;
-                        stateWasModified = true;
-                    }
-
-                    if (level.wins >= WINS_TO_UNLOCK && appState.currentLevelIndex < appState.levels.length - 1) {
-                        const nextLevel = appState.levels[appState.currentLevelIndex + 1];
-                        if (!nextLevel.unlocked) { nextLevel.unlocked = true; unlockedNewLevel = true; stateWasModified = true; }
-                    }
-
-                    if (stateWasModified) saveState();
-
-                    let unlockMsgText = '';
-                    if (unlockedNewLevel) unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`;
-                    
-                    DOM.unlockMessage.textContent = unlockMsgText;
-                    if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
-                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
-
-                    if (level.wins >= WINS_TO_UNLOCK) {
-                        DOM.btnNextMission.textContent = 'Ir a Niveles';
-                        DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
-                    } else {
                         DOM.btnNextMission.textContent = 'Siguiente Misión';
-                        DOM.btnNextMission.onclick = () => this.startNewGame(appState.currentLevelIndex);
+                        DOM.btnNextMission.onclick = () => this.startNewMission();
+                    } else {
+                        const level = appState.levels[appState.currentLevelIndex];
+                        level.wins++;
+                        
+                        // Life recovery on perfect attempt
+                        if (appState.missionAttempts === 1 && appState.levelLives < 3) {
+                            appState.levelLives++;
+                        }
+                        
+                        // Checkpoint logic
+                        if (level.wins === CHECKPOINT && !level.checkpointReached) {
+                            level.checkpointReached = true;
+                            appState.levelLives = 3;
+                            DOM.unlockMessage.textContent = "PUNTO DE CONTROL ALCANZADO\nVidas restauradas.";
+                            UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
+                        } else {
+                            DOM.unlockMessage.textContent = "";
+                        }
+                        
+                        const starsEarned = appState.missionAttempts === 1 ? 3 : (appState.missionAttempts === 2 ? 2 : 1);
+                        if (starsEarned > level.stars) {
+                            level.stars = starsEarned;
+                        }
+
+                        saveState();
+                        
+                        if (level.wins >= WINS_TO_UNLOCK) {
+                            const nextLevelIndex = appState.currentLevelIndex + 1;
+                            if (nextLevelIndex < appState.levels.length) {
+                                appState.levels[nextLevelIndex].unlocked = true;
+                                DOM.unlockMessage.textContent += `\n🏆 ¡NIVEL ${nextLevelIndex + 1} DESBLOQUEADO! 🏆`;
+                            }
+                            DOM.btnNextMission.textContent = 'Ir a Niveles';
+                            DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
+                        } else {
+                            DOM.btnNextMission.textContent = 'Siguiente Misión';
+                            DOM.btnNextMission.onclick = () => this.startNewMission();
+                        }
                     }
+                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
                 },
                 handleIncorrectAnswer() {
                     DOM.resultScreen.className = `screen active failure`;
@@ -573,19 +613,18 @@
                         DOM.resultTitle.textContent = 'RACHA TERMINADA';
                         DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`;
                         DOM.btnNextMission.textContent = 'Volver al Menú';
-                        DOM.btnNextMission.onclick = () => { appState.infiniteStreak = 0; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
+                        DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
                         appState.infiniteStreak = 0;
                         return;
                     }
-
-                    appState.lives--;
-                    appState.currentAttempts++;
+                    
+                    appState.levelLives--;
+                    appState.missionAttempts++;
                     this.updateHUD();
-                    saveState();
-
-                    if (appState.lives > 0) {
+                    
+                    if (appState.levelLives > 0) {
                         DOM.resultTitle.textContent = 'CASI...';
-                        DOM.unlockMessage.textContent = `Te quedan ${appState.lives} ${appState.lives === 1 ? 'intento' : 'intentos'}.`;
+                        DOM.unlockMessage.textContent = `Te quedan ${appState.levelLives} ${appState.levelLives === 1 ? 'vida' : 'vidas'} para el nivel.`;
                         DOM.btnNextMission.textContent = 'Intentar de Nuevo';
                         DOM.btnNextMission.onclick = () => {
                             appState.userAnswer = '';
@@ -594,10 +633,15 @@
                         };
                     } else {
                         const level = appState.levels[appState.currentLevelIndex];
-                        level.wins = 0;
+                        if (level.checkpointReached) {
+                            level.wins = CHECKPOINT;
+                        } else {
+                            level.wins = 0;
+                            level.checkpointReached = false;
+                        }
                         saveState();
-                        DOM.resultTitle.textContent = 'MISIÓN FALLIDA';
-                        DOM.unlockMessage.textContent = 'Has agotado tus intentos.\nTu racha de victorias para este nivel ha sido reiniciada.';
+                        DOM.resultTitle.textContent = 'NIVEL FALLIDO';
+                        DOM.unlockMessage.textContent = 'Has agotado tus vidas.\nTu progreso ha vuelto al último punto de control.';
                         DOM.btnNextMission.textContent = 'Volver a Niveles';
                         DOM.btnNextMission.onclick = () => {
                             UIManager.renderLevelSelect();
@@ -641,7 +685,7 @@
                     }
                 });
                 DOM.keyboardContainer.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) VirtualKeyboard.handleKeyPress(keyEl.dataset.key); });
-                DOM.levelSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.level-btn'); if (btn && !btn.disabled) GameManager.startNewGame(parseInt(btn.dataset.levelIndex)); });
+                DOM.levelSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.level-btn'); if (btn && !btn.disabled) GameManager.startLevelAttempt(parseInt(btn.dataset.levelIndex)); });
                 DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); });
                 window.addEventListener('resize', () => {
                     if (activeScreenId === 'screen-level-select') UIManager.checkAndSetLayoutMode();
@@ -650,7 +694,7 @@
                 DOM.btnProfile.innerHTML = ICONS.PROFILE;
                 DOM.btnProfile.addEventListener('click', () => { UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); });
                 DOM.btnBackToLevels.addEventListener('click', () => UIManager.goToScreen('screen-level-select'));
-                DOM.btnInfiniteMode.addEventListener('click', () => GameManager.startNewGame('infinite'));
+                DOM.btnInfiniteMode.addEventListener('click', () => GameManager.startInfiniteGame());
                 document.addEventListener('keydown', handlePhysicalKeyboard);
             }
             function handlePhysicalKeyboard(e) {
@@ -706,7 +750,7 @@
                 loadState(); 
                 generateSessionPriceList();
                 VirtualKeyboard.init(); Numpad.init(); setupEventListeners();
-                typewriter(DOM.biosText, 'CARGANDO SISTEMA v1.6...', 75, () => {
+                typewriter(DOM.biosText, 'CARGANDO SISTEMA v1.7...', 75, () => {
                     setTimeout(() => UIManager.goToScreen('screen-title'), 500);
                 });
             }

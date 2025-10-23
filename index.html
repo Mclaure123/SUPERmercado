@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Misión Supermercado v3.0</title>
+    <title>Misión Supermercado v4.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
     <style>
         :root {
             --color-bg: #1a1a1d;
@@ -16,24 +19,33 @@
             --color-danger: #d90087;
             --color-disabled-bg: #3a3a40;
             --color-disabled-text: #777;
-            --font-main: 'Courier New', Courier, monospace, system-ui;
-            --font-system: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* MEJORA: Añadir Noto Color Emoji como fallback en todas las fuentes */
+            --font-main: 'Share Tech Mono', "Noto Color Emoji", monospace;
+            --font-system: 'Roboto', "Noto Color Emoji", system-ui, sans-serif;
             --border-radius-main: 12px;
             --glow-main: 0 0 10px rgba(0, 246, 255, 0.15);
             --glow-main-hover: 0 0 15px rgba(0, 246, 255, 0.3);
             --transition-speed: 0.35s;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; font-family: var(--font-main); background-color: var(--color-bg); color: var(--color-text); }
+        html, body { 
+            width: 100vw; height: 100vh; overflow: hidden; 
+            font-family: var(--font-main); 
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            background-image: radial-gradient(circle at center, rgba(44, 44, 52, 0.5) 0%, transparent 70%),
+                              linear-gradient(rgba(0, 246, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to right, rgba(0, 246, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 25px 25px, 25px 25px;
+        }
         #app-container { position: relative; width: 100%; height: 100%; }
 
         @keyframes pop-in { 0% { opacity: 0; transform: scale(0.7); } 80% { opacity: 1; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes flash-confirm { 0% { box-shadow: 0 0 15px 5px rgba(0, 246, 255, 0.4); } 100% { box-shadow: none; } }
         @keyframes heart-beat { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
         @keyframes scanline-anim { 0% { transform: translateY(0%); } 100% { transform: translateY(-50%); } }
-        @keyframes pulse-glow { 0% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } 50% { box-shadow: 0 0 16px rgba(0, 246, 255, 0.4); } 100% { box-shadow: 0 0 8px rgba(0, 246, 255, 0.2); } }
         @keyframes flash-error-bg { 0%, 100% { background-color: var(--color-surface); } 50% { background-color: var(--color-danger); } }
-
+        
         .pop-in { animation: pop-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
         .flash-animation { animation: flash-confirm 0.4s ease-out; }
         .key-flash { animation: flash-confirm 0.2s ease-out; }
@@ -41,161 +53,101 @@
 
         .screen { display: none; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; opacity: 0; transform: scale(0.98); transition: opacity var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out; }
         .screen.active { display: flex; opacity: 1; transform: scale(1); }
-        .screen-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 700px; gap: 25px; height: 100%; padding: 20px; }
+        .screen-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 700px; gap: 25px; padding: 20px; }
         
-        #title-screen-wrapper { justify-content: space-between; padding-bottom: 10vh; }
-        .title-header { margin-top: 10vh; }
-        .title-footer { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        #title-screen-wrapper { justify-content: space-between; padding-bottom: 10vh; height: 100%; }
 
         .title { font-size: clamp(2.2rem, 8vw, 4rem); font-weight: 700; text-align: center; color: var(--color-primary); text-shadow: 0 0 10px rgba(0, 246, 255, 0.3); min-height: 1.2em; }
         .subtitle { font-size: clamp(1.2rem, 4vw, 1.8rem); text-align: center; color: #aaa; min-height: 1.2em; }
         .typing-cursor::after { content: '▋'; animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        .btn { padding: 15px 30px; font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; color: var(--color-bg); background-color: var(--color-primary); border: none; border-radius: var(--border-radius-main); cursor: pointer; transition: all 0.2s ease-out; min-width: clamp(220px, 50vw, 300px); box-shadow: var(--glow-main); }
+        .btn { padding: 15px 30px; font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 600; color: var(--color-bg); background-color: var(--color-primary); border: none; cursor: pointer; transition: all 0.2s ease-out; min-width: clamp(220px, 50vw, 300px); box-shadow: var(--glow-main); border-radius: 0; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
         .btn:hover { background-color: var(--color-primary-dark); box-shadow: var(--glow-main-hover); transform: translateY(-2px); }
-        .btn:active { transform: scale(0.97) translateY(0); }
-        .btn-secondary { background-color: var(--color-surface); color: var(--color-text); box-shadow: none; }
-        .btn-secondary:hover { background-color: var(--color-surface-light); }
-        .btn-danger { background-color: var(--color-error); color: var(--color-bg); box-shadow: 0 0 10px rgba(255, 0, 160, 0.2); }
-        .btn-danger:hover { background-color: var(--color-danger); box-shadow: 0 0 15px rgba(255, 0, 160, 0.4); }
-        .btn-small { font-size: clamp(0.9rem, 2vw, 1rem); padding: 10px 20px; min-width: auto; }
         .btn-icon { background: none; border: none; cursor: pointer; padding: 10px; min-width: auto; box-shadow: none; }
         .btn-icon svg { width: 32px; height: 32px; fill: #aaa; transition: fill 0.2s; }
         .btn-icon:hover svg { fill: var(--color-primary); }
         
         #scanline-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 200%; pointer-events: none; z-index: 9999; background: repeating-linear-gradient(to bottom, rgba(0, 246, 255, 0.03), rgba(0, 246, 255, 0.03) 1px, transparent 1px, transparent 4px); animation: scanline-anim 20s linear infinite; }
-        #screen-bios { background-color: #111; color: var(--color-primary); font-family: var(--font-main); }
-        #bios-logo { width: 100px; height: 100px; }
-        #bios-logo path, #bios-logo circle { stroke: var(--color-primary) !important; }
-        #bios-text { min-height: 1.2em; }
-        .display-panel { width: 100%; background-color: var(--color-surface); border: 1px solid var(--color-surface-light); border-radius: var(--border-radius-main); padding: 15px; }
         
-        #name-display { min-height: 60px; font-size: clamp(1.5rem, 5vw, 2.5rem); display: flex; align-items: center; justify-content: center; font-family: var(--font-main); }
-        #keyboard-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 8px; }
-        .keyboard-row { display: flex; justify-content: center; gap: 8px; }
-        .key { display: flex; justify-content: center; align-items: center; height: clamp(45px, 7vh, 55px); flex-grow: 1; font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 500; background-color: var(--color-surface); color: var(--color-text); border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.1s, transform 0.1s; }
-        .key:active { background-color: var(--color-bg); transform: translateY(1px); }
-        .key.function { background-color: var(--color-disabled-bg); }
-        .key svg { width: clamp(24px, 4vh, 28px); height: auto; fill: var(--color-text); }
-        .key.shift-active { background-color: var(--color-primary); }
-        .key.shift-active svg { fill: var(--color-bg); }
-        #name-confirm-key { background-color: var(--color-primary); }
-        #name-confirm-key.disabled { background-color: var(--color-disabled-bg); }
-        #name-confirm-key.disabled svg { fill: var(--color-disabled-text); }
-        #name-confirm-key svg { fill: var(--color-bg); }
+        .display-panel { width: 100%; border: 1px solid var(--color-primary-dark); padding: 20px; background: linear-gradient(145deg, var(--color-surface), #212128); border-radius: 0; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
         
-        #level-select-header { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 700px; padding: 0 10px; flex-shrink: 0; }
-        #system-bar { display: flex; align-items: center; }
-        #level-select-grid { flex-grow: 1; width: 100%; max-width: 700px; overflow: hidden; }
-        #level-select-buttons { flex-shrink: 0; }
-        #level-select-grid.grid-mode { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; align-content: start; }
-        .grid-mode .level-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; min-height: 130px; }
-        .grid-mode .level-info-wrapper { text-align: center; }
-        .grid-mode .level-status-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: auto; }
-        #level-select-grid.list-mode { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
-        .list-mode .level-btn { display: flex; flex-direction: row; justify-content: space-between; align-items: center; min-height: auto; padding: 8px 15px; }
-        .list-mode .level-info-wrapper { text-align: left; }
-        .list-mode .level-status-wrapper { flex-direction: row; gap: 15px; margin-top: 0; }
-        .level-btn { background-color: transparent; border: 2px solid var(--color-surface-light); color: var(--color-text); border-radius: var(--border-radius-main); font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .level-btn:hover { background-color: var(--color-surface); border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-3px); animation: pulse-glow 1.5s infinite; }
+        #screen-level-select .screen-content-wrapper { justify-content: center; gap: 35px; height: 100%; max-width: 800px; }
+        #level-select-header { width: 100%; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        #level-select-grid { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+        .level-btn { background-color: rgba(44, 44, 52, 0.5); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border: 1px solid var(--color-surface-light); color: var(--color-text); font-weight: bold; cursor: pointer; transition: all 0.2s ease-out; border-radius: 0; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; min-height: 140px; }
+        .level-btn:hover { background-color: var(--color-surface); border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-5px) scale(1.03); box-shadow: 0 0 15px rgba(0, 246, 255, 0.4); }
         .level-btn.locked { background-color: var(--color-surface); border-color: var(--color-disabled-bg); color: var(--color-disabled-text); cursor: not-allowed; opacity: 0.6; }
-        .level-btn.locked:hover { transform: none; background-color: var(--color-surface); animation: none; }
-        .level-info-wrapper, .level-status-wrapper { pointer-events: none; }
-        .level-title { font-size: 1.1rem; }
-        .level-theme { font-size: 0.8rem; font-weight: normal; opacity: 0.8; }
-        .level-stars { letter-spacing: 2px; }
-        .level-icon { font-size: 1.2rem; }
-        #btn-infinite-mode { background-color: var(--color-error); color: var(--color-bg); font-size: 1.2rem; margin-top: 10px; display: none; box-shadow: 0 0 10px rgba(255, 0, 160, 0.2); }
-        #btn-infinite-mode:hover { background-color: var(--color-danger); box-shadow: 0 0 15px rgba(255, 0, 160, 0.4); }
+        .level-btn.locked:hover { transform: none; box-shadow: none; }
+        .level-title { font-size: 1.2rem; }
+        .level-icon { font-size: 1.5rem; font-family: var(--font-system); }
         
-        #screen-game { flex-direction: column; padding: 10px 10px 0 10px; justify-content: space-between; }
-        #scroll-content { flex-grow: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 15px; padding: 10px 0; }
-        #action-bar { flex-shrink: 0; width: 100%; padding: 10px; background-color: var(--color-bg); gap: 10px; display: flex; flex-direction: column; align-items: center; }
-        #game-hud { width: 100%; max-width: 700px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; font-size: clamp(0.8rem, 2vw, 1rem); color: #aaa; gap: 10px;}
-        #hud-left { display: flex; align-items: center; gap: 10px; }
-        #hud-right { display: flex; align-items: center; gap: 10px; }
+        #screen-game { flex-direction: column; padding: 10px; justify-content: flex-start; }
+        .game-content-wrapper { display: flex; flex-direction: column; width: 100%; max-width: 700px; gap: 15px; flex-grow: 1; }
+        #scroll-content { width: 100%; overflow-y: auto; }
+        #action-bar { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; }
+        #game-hud { width: 100%; z-index: 100; background-color: rgba(44, 44, 52, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(0, 246, 255, 0.2); border-radius: 12px; padding: 8px 15px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; font-size: clamp(0.8rem, 2vw, 1rem); color: #aaa; gap: 10px; }
+        #hud-left, #hud-right { display: flex; align-items: center; gap: 10px; }
         #hud-lives { display: flex; gap: 5px; font-size: 1.5rem; color: var(--color-error); }
         #hud-lives .life.lost { opacity: 0.3; }
-        #hud-shield { font-size: 1.5rem; color: var(--color-primary); }
         #hud-wins-tracker { display: flex; gap: 4px; border: 1px solid var(--color-surface-light); padding: 2px 5px; border-radius: 6px; }
         .win-dot { width: 8px; height: 8px; background-color: var(--color-disabled-text); border-radius: 3px; opacity: 0.3; }
         .win-dot.filled { opacity: 1; background-color: var(--color-primary); }
-        .hud-error-flash #hud-lives .life:not(.lost):last-of-type, .hud-error-flash #hud-shield { animation: heart-beat 0.5s ease-in-out; }
-        #hud-difficulty, #hud-streak { font-weight: bold; padding: 4px 10px; border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); }
-        #problem-container { background-color: var(--color-surface); flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; width: 100%; max-width: 700px; overflow-y: auto; }
-        .problem-title { font-size: 1.2em; font-weight: bold; text-align: left; }
+        #problem-container { display: flex; flex-direction: column; justify-content: space-between; width: 100%; flex-grow: 1; gap: 10px; }
+        
         .problem-item-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px dashed var(--color-bg); }
-
         .product-card { position: relative; display: flex; flex-direction: column; align-items: center; background-color: var(--color-bg); padding: 10px; border-radius: var(--border-radius-main); gap: 5px; transition: all 0.3s; width: 90px; }
         .product-card::after { position: absolute; top: -5px; right: -5px; background-color: var(--color-error); color: var(--color-bg); padding: 3px 6px; font-size: 0.8rem; border-radius: 8px; font-weight: bold; opacity: 0; transition: opacity 0.3s; font-family: var(--font-system); }
         .product-card.free::after { content: 'GRATIS'; opacity: 1; }
         .product-card.doubled::after { content: 'x2'; opacity: 1; background-color: var(--color-primary); }
-        .product-card.defective::after { content: '🚫'; opacity: 1; font-size: 1rem; padding: 2px 4px; }
+        .product-card.defective::after { content: '🚫'; opacity: 1; font-size: 1rem; padding: 2px 4px; font-family: var(--font-system); }
         .product-emoji-container { font-size: 2.8em; line-height: 1; display: flex; font-family: var(--font-system); }
         .product-price { font-weight: bold; font-size: 1.1em; white-space: nowrap; }
+
+        #answer-display { width: 100%; max-width: 350px; height: 55px; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; color: var(--color-primary); display: flex; align-items: center; justify-content: center; }
         
-        .problem-payment, .problem-question { font-size: 1.1em; text-align: left; }
-        .problem-question { font-weight: bold; margin-top: 5px; }
-        #coupon-indicator { display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--color-bg); padding: 8px; margin-top: 10px; border-radius: var(--border-radius-main); font-size: 1rem; color: var(--color-primary); }
-        #coupon-indicator svg { width: 40px; height: auto; }
-        
-        #answer-display { width: 100%; max-width: 350px; background-color: var(--color-surface); height: 55px; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; color: var(--color-primary); border: 1px solid var(--color-surface-light); border-radius: var(--border-radius-main); display: flex; align-items: center; justify-content: center; }
         #numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 350px;}
-        #numpad-grid .key { height: 55px; font-size: 2rem; font-weight: 600; background-color: var(--color-bg); }
-        #numpad-grid.industrial .key { border-radius: 0; clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%); }
+        #numpad-grid .key { height: 55px; font-size: 2rem; font-weight: 600; color: var(--color-text); background-color: var(--color-surface); background-image: linear-gradient(to top, rgba(0,0,0,0.2), rgba(255,255,255,0.1)); border-radius: 8px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1); transition: all 0.15s ease-out; }
+        #numpad-grid .key:hover { background-color: var(--color-surface-light); transform: translateY(-3px); box-shadow: 0 7px 10px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.2); }
+        #numpad-grid .key:active { transform: translateY(1px); background-color: var(--color-bg); box-shadow: inset 0 3px 5px rgba(0,0,0,0.5); }
         #numpad-enter:not(.disabled) { background-color: var(--color-primary) !important; }
         #numpad-enter:not(.disabled) svg { fill: var(--color-bg); }
         
-        #screen-result .btn { box-shadow: none; }
-        #screen-result.success { color: var(--color-primary); }
-        #screen-result.failure { color: var(--color-error); }
-        #screen-result .title { color: inherit; }
-        #unlock-message { color: var(--color-primary); margin-top: -15px; min-height: 2.2rem; white-space: pre-wrap; text-align: center; }
-        #result-icon { width: clamp(80px, 15vh, 120px); height: auto; }
-        #result-icon path { fill: inherit; }
-        #result-explanation { background: var(--color-surface); border: 1px solid var(--color-surface-light); padding: 15px; border-radius: var(--border-radius-main); font-size: 1.1em; white-space: pre-wrap; width: 100%; max-width: 600px; display: none; }
+        #screen-result .screen-content-wrapper { height: 100%; justify-content: center; }
         
-        #profile-stats { display: flex; gap: 40px; font-size: 1.5rem; text-align: center; }
-        .stat-value { font-size: 3rem; font-weight: bold; color: var(--color-primary); }
-        #arsenal-section { width: 100%; max-width: 600px; margin-top: 20px; display: none; }
-        .arsenal-group { margin-bottom: 20px; }
-        .arsenal-title { font-size: 1.2rem; color: var(--color-primary); margin-bottom: 10px; border-bottom: 1px solid var(--color-surface-light); padding-bottom: 5px; }
-        .arsenal-options { display: flex; gap: 10px; flex-wrap: wrap; }
-        .arsenal-btn { font-size: 0.9rem; padding: 8px 12px; border: 2px solid var(--color-surface-light); background-color: var(--color-surface); color: var(--color-text); cursor: pointer; border-radius: 8px; }
-        .arsenal-btn.selected { border-color: var(--color-primary); color: var(--color-primary); }
+        #result-explanation { font-size: 1.1em; white-space: pre-wrap; width: 100%; max-width: 600px; display: none; }
+        .problem-payment, .problem-question { font-size: 1.1em; text-align: left; }
+        .problem-question { font-weight: bold; }
 
+        #coupon-indicator { display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--color-bg); padding: 8px; border-radius: var(--border-radius-main); font-size: 1rem; color: var(--color-primary); border: 1px dashed var(--color-primary); }
+        #coupon-indicator svg { width: 40px; height: auto; }
+        #coupon-indicator span { font-family: var(--font-system); }
+
+        .anomaly-emoji { font-size: 4rem; line-height: 1; margin-bottom: 15px; font-family: var(--font-system); }
+        
         #anomaly-alert, #fullscreen-prompt { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(26, 26, 29, 0.95); z-index: 10000; display: none; justify-content: center; align-items: center; text-align: center; padding: 20px; }
         #anomaly-alert-content, #fullscreen-prompt-content { border: 2px solid var(--color-error); padding: 30px; border-radius: var(--border-radius-main); box-shadow: 0 0 20px rgba(255, 0, 160, 0.3); max-width: 600px; }
-        #anomaly-alert-title { color: var(--color-error); font-size: clamp(1.5rem, 5vw, 2.5rem); margin-bottom: 15px; }
-        #anomaly-alert-message { font-size: clamp(1.1rem, 4vw, 1.8rem); line-height: 1.4; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        #anomaly-alert-message svg { width: clamp(50px, 15vw, 80px); height: auto; }
-        #fullscreen-prompt-content { border-color: var(--color-primary); box-shadow: 0 0 20px rgba(0, 246, 255, 0.3); display: flex; flex-direction: column; gap: 20px; }
+
+        @media (min-width: 800px) {
+            #screen-game { justify-content: center; align-items: center; padding: 20px; flex-direction: column; gap: 20px; }
+            #game-hud { position: relative; width: 100%; max-width: 1000px; }
+            .game-content-wrapper { flex-direction: row; align-items: stretch; width: 100%; max-width: 1000px; height: 75vh; max-height: 550px; flex-grow: 0; }
+            #scroll-content { flex: 1 1 55%; height: 100%; display: flex; }
+            #problem-container { height: 100%; }
+            #action-bar { flex: 1 1 45%; justify-content: center; height: 100%; }
+        }
     </style>
 </head>
 <body>
     <div id="app-container">
-        <div id="scanline-overlay"></div>
-        <div id="anomaly-alert">
-            <div id="anomaly-alert-content">
-                <h1 id="anomaly-alert-title"></h1>
-                <div id="anomaly-alert-message"></div>
-            </div>
-        </div>
-        <div id="fullscreen-prompt">
-            <div id="fullscreen-prompt-content">
-                <h2 class="subtitle" style="color: var(--color-text);">Para una mejor experiencia, se recomienda jugar en pantalla completa.</h2>
-                <button id="btn-gofullscreen" class="btn">REACTIVAR PANTALLA COMPLETA</button>
-                <button id="btn-continue-anyway" class="btn btn-secondary btn-small">Continuar de todos modos</button>
-            </div>
-        </div>
-        <div id="screen-bios" class="screen active"> <div class="screen-content-wrapper"> <svg viewBox="0 0 100 100" id="bios-logo"> <path d="M10 90 L20 90 L25 40 L80 40 L85 70 L60 70 L55 80 L90 80 M25 40 L30 20 L45 20 L50 40" stroke="#0F0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="35" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/><circle cx="70" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"/> </svg><p id="bios-text"></p> </div> </div>
-        <div id="screen-title" class="screen"> <div id="title-screen-wrapper" class="screen-content-wrapper"> <div class="title-header"> <h1 class="title typewriter-effect">Misión Supermercado</h1> <h2 class="subtitle">Un juego de matemáticas</h2> </div> <div class="title-footer"> <button id="btn-start" class="btn">INICIAR</button> <button id="btn-sound-toggle" class="btn-icon"></button> </div> </div> </div>
-        <div id="screen-name" class="screen"> <div class="screen-content-wrapper"> <h2 class="subtitle typewriter-effect">Introduce tu nombre</h2> <div id="name-display" class="display-panel">_</div> <div id="keyboard-container"></div> </div> </div>
-        <div id="screen-level-select" class="screen"> <div class="screen-content-wrapper"> <div id="level-select-header"><h2 id="level-select-greeting" class="subtitle typewriter-effect"></h2><div id="system-bar"><button id="btn-profile" class="btn-icon"></button><button id="btn-main-sound-toggle" class="btn-icon"></button><button id="btn-change-name" class="btn-icon"></button></div></div> <div id="level-select-grid"></div> <div id="level-select-buttons"><button id="btn-infinite-mode" class="btn">Turno del Experto ♾️</button></div> </div> </div>
-        <div id="screen-game" class="screen"> <div id="scroll-content"> <div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-lives"></div><div id="hud-shield"></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div> <div id="problem-container" class="display-panel"></div> </div> <div id="action-bar"> <div id="answer-display">_</div><div id="numpad-grid"></div></div> </div>
-        <div id="screen-result" class="screen"> <div class="screen-content-wrapper"> <svg id="result-icon" viewBox="0 0 100 100"></svg> <h1 id="result-title" class="title typewriter-effect"></h1> <p id="unlock-message"></p> <p id="result-explanation"></p> <button id="btn-next-mission" class="btn"></button> </div> </div>
-        <div id="screen-profile" class="screen"> <div class="screen-content-wrapper"> <h1 class="title typewriter-effect">Progreso del Jugador</h1> <h2 id="profile-player-name" class="subtitle"></h2> <div id="profile-stats"> <div><div class="stat-value"><span id="profile-total-stars">0</span>/30</div><div>Estrellas</div></div> <div><div class="stat-value"><span id="profile-mastered-levels">0</span>/10</div><div>Niveles Dominados</div></div> </div> <div id="arsenal-section"> <div id="color-palette-group" class="arsenal-group" style="display: none;"> <h3 class="arsenal-title">Paleta de Colores</h3> <div id="color-options" class="arsenal-options"></div> </div> <div id="numpad-style-group" class="arsenal-group" style="display: none;"> <h3 class="arsenal-title">Diseño de Teclado</h3> <div id="numpad-options" class="arsenal-options"></div> </div> </div> <button id="btn-back-to-levels" class="btn">Volver a Niveles</button><button id="btn-reset-progress" class="btn btn-danger btn-small">Reiniciar Progreso</button> </div> </div>
+        <div id="scanline-overlay"></div><div id="anomaly-alert"><div id="anomaly-alert-content"><h1 id="anomaly-alert-title"></h1><div id="anomaly-alert-message"></div></div></div><div id="fullscreen-prompt"><div id="fullscreen-prompt-content"><h2 class="subtitle" style="color: var(--color-text);">Para una mejor experiencia, se recomienda jugar en pantalla completa.</h2><button id="btn-gofullscreen" class="btn">REACTIVAR PANTALLA COMPLETA</button><button id="btn-continue-anyway" class="btn btn-secondary btn-small">Continuar de todos modos</button></div></div>
+        <div id="screen-bios" class="screen active"><div class="screen-content-wrapper"><svg viewBox="0 0 100 100" id="bios-logo"><path d="M10 90 L20 90 L25 40 L80 40 L85 70 L60 70 L55 80 L90 80 M25 40 L30 20 L45 20 L50 40" stroke="#0F0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="35" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"></circle><circle cx="70" cy="90" r="5" stroke="#0F0" stroke-width="3" fill="none"></circle></svg><p id="bios-text"></p></div></div>
+        <div id="screen-title" class="screen"><div id="title-screen-wrapper" class="screen-content-wrapper"><div class="title-header"><h1 class="title typewriter-effect">Misión Supermercado</h1><h2 class="subtitle">Un juego de matemáticas</h2></div><div class="title-footer"><button id="btn-start" class="btn">INICIAR</button><button id="btn-sound-toggle" class="btn-icon"></button></div></div></div>
+        <div id="screen-name" class="screen"><div class="screen-content-wrapper"><h2 class="subtitle typewriter-effect">Introduce tu nombre</h2><div id="name-display" class="display-panel">_</div><div id="keyboard-container"></div></div></div>
+        <div id="screen-level-select" class="screen"><div class="screen-content-wrapper"><div id="level-select-header"><h2 id="level-select-greeting" class="subtitle typewriter-effect"></h2><div id="system-bar"><button id="btn-profile" class="btn-icon"></button><button id="btn-main-sound-toggle" class="btn-icon"></button><button id="btn-change-name" class="btn-icon"></button></div></div><div id="level-select-grid"></div><div id="level-select-buttons"><button id="btn-infinite-mode" class="btn">Turno del Experto ♾️</button></div></div></div>
+        <div id="screen-game" class="screen"><div id="game-hud"><div id="hud-left"><span id="hud-player-name"></span><div id="hud-wins-tracker"></div></div><div id="hud-right"><div id="hud-lives"></div><div id="hud-shield"></div><span id="hud-streak"></span><span id="hud-difficulty"></span></div></div><div class="game-content-wrapper"><div id="scroll-content"><div id="problem-container" class="display-panel"></div></div><div id="action-bar"><div id="answer-display" class="display-panel">_</div><div id="numpad-grid"></div></div></div></div>
+        <div id="screen-result" class="screen"><div class="screen-content-wrapper"><svg id="result-icon" viewBox="0 0 100 100"></svg><h1 id="result-title" class="title typewriter-effect"></h1><p id="unlock-message"></p><p id="result-explanation" class="display-panel"></p><button id="btn-next-mission" class="btn"></button></div></div>
+        <div id="screen-profile" class="screen"><div class="screen-content-wrapper"><h1 class="title typewriter-effect">Progreso del Jugador</h1><h2 id="profile-player-name" class="subtitle"></h2><div id="profile-stats"><div><div class="stat-value"><span id="profile-total-stars">0</span>/30</div><div>Estrellas</div></div><div><div class="stat-value"><span id="profile-mastered-levels">0</span>/10</div><div>Niveles Dominados</div></div></div><div id="arsenal-section"><div id="color-palette-group" class="arsenal-group" style="display: none;"><h3 class="arsenal-title">Paleta de Colores</h3><div id="color-options" class="arsenal-options"></div></div><div id="numpad-style-group" class="arsenal-group" style="display: none;"><h3 class="arsenal-title">Diseño de Teclado</h3><div id="numpad-options" class="arsenal-options"></div></div></div><button id="btn-back-to-levels" class="btn">Volver a Niveles</button><button id="btn-reset-progress" class="btn btn-danger btn-small">Reiniciar Progreso</button></div></div>
     </div>
 
     <script>
@@ -223,780 +175,109 @@
             }
 
             const ICONS = { SHIFT: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>`, BACKSPACE: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M22 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.79 13.21L15.5 14.5l-2.29-2.29L10.92 14.5 9.5 13.08l2.29-2.29L9.5 8.5l1.42-1.42 2.29 2.29L15.5 7.08l1.42 1.42-2.29 2.29L17.21 13.08l-1.42 1.42z"/></svg>`, CHECK: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`, CLEAR: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`, PROFILE: `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`, ENTER: `<svg class="key-icon" viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>`, SOUND_ON: `<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`, SOUND_OFF: `<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`, SWITCH_PLAYER: `<svg viewBox="0 0 24 24"><path d="M16 17v-3H9v-4h7V7l5 5-5 5zM14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>` };
-            const THEMES = {
-                cyan: { primary: '#00f6ff', dark: '#00d1d9' },
-                amber: { primary: '#FFC107', dark: '#FFA000' },
-                green: { primary: '#4CAF50', dark: '#388E3C' },
-                magenta: { primary: '#E91E63', dark: '#C2185B' },
-                gold: { primary: '#FFD700', dark: '#FFC107' }
-            };
+            const THEMES = { cyan: { primary: '#00f6ff', dark: '#00d1d9' }, amber: { primary: '#FFC107', dark: '#FFA000' }, green: { primary: '#4CAF50', dark: '#388E3C' }, magenta: { primary: '#E91E63', dark: '#C2185B' }, gold: { primary: '#FFD700', dark: '#FFC107' } };
             const NUMPAD_STYLES = ['standard', 'industrial'];
             
-            const THEMED_PRODUCTS = { fruits: [ { name: 'Manzana', emoji: '🍎', priceRange: [1, 3] }, { name: 'Banana', emoji: '🍌', priceRange: [1, 2] }, { name: 'Naranja', emoji: '🍊', priceRange: [2, 4] }, { name: 'Uva', emoji: '🍇', priceRange: [5, 8] }, { name: 'Fresa', emoji: '🍓', priceRange: [4, 6] }, { name: 'Piña', emoji: '🍍', priceRange: [10, 15] }, { name: 'Cereza', emoji: '🍒', priceRange: [6, 9] }, { name: 'Sandía', emoji: '🍉', priceRange: [12, 18] }, { name: 'Pera', emoji: '🍐', priceRange: [2, 4] }, { name: 'Limón', emoji: '🍋', priceRange: [1, 2] } ], vegetables: [ { name: 'Brócoli', emoji: '🥦', priceRange: [5, 8] }, { name: 'Zanahoria', emoji: '🥕', priceRange: [1, 3] }, { name: 'Tomate', emoji: '🍅', priceRange: [2, 4] }, { name: 'Papa', emoji: '🥔', priceRange: [1, 2] }, { name: 'Maíz', emoji: '🌽', priceRange: [3, 5] }, { name: 'Berenjena', emoji: '🍆', priceRange: [4, 6] }, { name: 'Lechuga', emoji: '🥬', priceRange: [3, 5] }, { name: 'Cebolla', emoji: '🧅', priceRange: [1, 3] }, { name: 'Pimiento', emoji: '🫑', priceRange: [2, 4] }, { name: 'Ajo', emoji: '🧄', priceRange: [1, 2] } ], bakery: [ { name: 'Pan', emoji: '🍞', priceRange: [2, 5] }, { name: 'Galleta', emoji: '🍪', priceRange: [2, 4] }, { name: 'Dona', emoji: '🍩', priceRange: [4, 6] }, { name: 'Pastel', emoji: '🍰', priceRange: [20, 30] }, { name: 'Croissant', emoji: '🥐', priceRange: [5, 8] }, { name: 'Baguette', emoji: '🥖', priceRange: [6, 10] }, { name: 'Pretzel', emoji: '🥨', priceRange: [4, 7] }, { name: 'Cupcake', emoji: '🧁', priceRange: [8, 12] }, { name: 'Waffle', emoji: '🧇', priceRange: [10, 15] }, { name: 'Tarta', emoji: '🥧', priceRange: [15, 25] } ], dairy: [ { name: 'Leche', emoji: '🥛', priceRange: [5, 8] }, { name: 'Queso', emoji: '🧀', priceRange: [10, 15] }, { name: 'Yogur', emoji: '🍦', priceRange: [3, 6] }, { name: 'Huevo', emoji: '🥚', priceRange: [1, 2] }, { name: 'Mantequilla', emoji: '🧈', priceRange: [8, 12] }, { name: 'Helado', emoji: '🍨', priceRange: [15, 20] }, { name: 'Crema', emoji: '🍶', priceRange: [7, 10] }, { name: 'Batido', emoji: '🥤', priceRange: [12,16] }, { name: 'Requesón', emoji: '🧀', priceRange: [9,13] }, { name: 'Nata', emoji: '🍥', priceRange: [8,11] } ], pantry: [ { name: 'Arroz', emoji: '🍚', priceRange: [8, 12] }, { name: 'Fideos', emoji: '🍝', priceRange: [6, 9] }, { name: 'Atún', emoji: '🥫', priceRange: [7, 10] }, { name: 'Aceite', emoji: '🏺', priceRange: [15, 20] }, { name: 'Sal', emoji: '🧂', priceRange: [3, 5] }, { name: 'Miel', emoji: '🍯', priceRange: [12, 18] }, { name: 'Mostaza', emoji: '🌭', priceRange: [8, 11] }, { name: 'Harina', emoji: '🌾', priceRange: [5, 8] }, { name: 'Azúcar', emoji: '🍬', priceRange: [6, 9] }, { name: 'Café', emoji: '☕', priceRange: [18, 25] } ], drinks: [ { name: 'Jugo', emoji: '🧃', priceRange: [4, 7] }, { name: 'Agua', emoji: '💧', priceRange: [3, 5] }, { name: 'Gaseosa', emoji: '🥤', priceRange: [6, 9] }, { name: 'Té', emoji: '🍵', priceRange: [10, 15] }, { name: 'Limonada', emoji: '🍋', priceRange: [8,12] }, { name: 'Vino', emoji: '🍷', priceRange: [25,35] }, { name: 'Cerveza', emoji: '🍺', priceRange: [10,15] }, { name: 'Coctel', emoji: '🍸', priceRange: [15,20] }, { name: 'Whisky', emoji: '🥃', priceRange: [50,70] }, { name: 'Ginebra', emoji: '🍸', priceRange: [45,65] } ], meats: [ { name: 'Pollo', emoji: '🍗', priceRange: [20, 30] }, { name: 'Carne', emoji: '🥩', priceRange: [30, 40] }, { name: 'Salchicha', emoji: '🌭', priceRange: [2, 4] }, { name: 'Jamón', emoji: '🍖', priceRange: [15, 20] }, { name: 'Pescado', emoji: '🐟', priceRange: [25, 35] }, { name: 'Bacon', emoji: '🥓', priceRange: [18,25] }, { name: 'Camarón', emoji: '🍤', priceRange: [35,45] }, { name: 'Cangrejo', emoji: '🦀', priceRange: [40,50] }, { name: 'Costilla', emoji: '🍖', priceRange: [28,38] }, { name: 'Pavo', emoji: '🦃', priceRange: [50,60] } ], snacks: [ { name: 'Chocolate', emoji: '🍫', priceRange: [8, 12] }, { name: 'Papas Fritas', emoji: '🍟', priceRange: [5, 8] }, { name: 'Palomitas', emoji: '🍿', priceRange: [6, 10] }, { name: 'Maní', emoji: '🥜', priceRange: [4, 7] }, { name: 'Rosquilla', emoji: '🍩', priceRange: [5,9] }, { name: 'Sushi', emoji: '🍣', priceRange: [15,25] }, { name: 'Taco', emoji: '🌮', priceRange: [12,18] }, { name: 'Pizza', emoji: '🍕', priceRange: [30,40] }, { name: 'Hamburguesa', emoji: '🍔', priceRange: [20,30] }, { name: 'Hotdog', emoji: '🌭', priceRange: [15,22] } ], cleaning: [ { name: 'Jabón', emoji: '🧼', priceRange: [5, 8] }, { name: 'Champú', emoji: '🧴', priceRange: [15, 20] }, { name: 'Detergente', emoji: '✨', priceRange: [18, 25] }, { name: 'Esponja', emoji: '🧽', priceRange: [3, 6] }, { name: 'Papel Hig.', emoji: '🧻', priceRange: [12, 18] }, { name: 'Cepillo', emoji: '🧹', priceRange: [8,12] }, { name: 'Pasta D.', emoji: '😁', priceRange: [10,15] }, { name: 'Rastrillo', emoji: '🔪', priceRange: [7,11] }, { name: 'Escoba', emoji: '🧹', priceRange: [20,30] }, { name: 'Cubo', emoji: '🗑️', priceRange: [25,35] } ], };
+            const THEMED_PRODUCTS = { fruits: [ { name: 'Manzana', emoji: '🍎', priceRange: [1, 3] }, { name: 'Banana', emoji: '🍌', priceRange: [1, 2] }, { name: 'Naranja', emoji: '🍊', priceRange: [2, 4] }, { name: 'Uva', emoji: '🍇', priceRange: [5, 8] }, { name: 'Fresa', emoji: '🍓', priceRange: [4, 6] }, { name: 'Piña', emoji: '🍍', priceRange: [10, 15] }, { name: 'Cereza', emoji: '🍒', priceRange: [6, 9] }, { name: 'Sandía', emoji: '🍉', priceRange: [12, 18] }, { name: 'Pera', emoji: '🍐', priceRange: [2, 4] }, { name: 'Limón', emoji: '🍋', priceRange: [1, 2] } ], vegetables: [ { name: 'Brócoli', emoji: '🥦', priceRange: [5, 8] }, { name: 'Zanahoria', emoji: '🥕', priceRange: [1, 3] }, { name: 'Tomate', emoji: '🍅', priceRange: [2, 4] }, { name: 'Papa', emoji: '🥔', priceRange: [1, 2] }, { name: 'Maíz', emoji: '🌽', priceRange: [3, 5] }, { name: 'Berenjena', emoji: '🍆', priceRange: [4, 6] }, { name: 'Ensalada', emoji: '🥗', priceRange: [3, 5] }, { name: 'Cebolla', emoji: '🧅', priceRange: [1, 3] }, { name: 'Pepino', emoji: '🥒', priceRange: [2, 4] }, { name: 'Chile', emoji: '🌶️', priceRange: [1, 2] } ], bakery: [ { name: 'Pan', emoji: '🍞', priceRange: [2, 5] }, { name: 'Galleta', emoji: '🍪', priceRange: [2, 4] }, { name: 'Dona', emoji: '🍩', priceRange: [4, 6] }, { name: 'Pastel', emoji: '🍰', priceRange: [20, 30] }, { name: 'Croissant', emoji: '🥐', priceRange: [5, 8] }, { name: 'Baguette', emoji: '🥖', priceRange: [6, 10] }, { name: 'Pretzel', emoji: '🥨', priceRange: [4, 7] }, { name: 'Cupcake', emoji: '🧁', priceRange: [8, 12] }, { name: 'Waffle', emoji: '🧇', priceRange: [10, 15] }, { name: 'Tarta', emoji: '🥧', priceRange: [15, 25] } ], dairy: [ { name: 'Leche', emoji: '🥛', priceRange: [5, 8] }, { name: 'Queso', emoji: '🧀', priceRange: [10, 15] }, { name: 'Yogur', emoji: '🍦', priceRange: [3, 6] }, { name: 'Huevo', emoji: '🥚', priceRange: [1, 2] }, { name: 'Mantequilla', emoji: '🧈', priceRange: [8, 12] }, { name: 'Helado', emoji: '🍨', priceRange: [15, 20] }, { name: 'Crema', emoji: '🍶', priceRange: [7, 10] }, { name: 'Batido', emoji: '🥤', priceRange: [12,16] }, { name: 'Requesón', emoji: '🧀', priceRange: [9,13] }, { name: 'Nata', emoji: '🍥', priceRange: [8,11] } ], pantry: [ { name: 'Arroz', emoji: '🍚', priceRange: [8, 12] }, { name: 'Fideos', emoji: '🍝', priceRange: [6, 9] }, { name: 'Atún', emoji: '🥫', priceRange: [7, 10] }, { name: 'Aceite', emoji: '🏺', priceRange: [15, 20] }, { name: 'Sal', emoji: '🧂', priceRange: [3, 5] }, { name: 'Miel', emoji: '🍯', priceRange: [12, 18] }, { name: 'Mostaza', emoji: '🌭', priceRange: [8, 11] }, { name: 'Harina', emoji: '🌾', priceRange: [5, 8] }, { name: 'Azúcar', emoji: '🍬', priceRange: [6, 9] }, { name: 'Café', emoji: '☕', priceRange: [18, 25] } ], drinks: [ { name: 'Jugo', emoji: '🧃', priceRange: [4, 7] }, { name: 'Agua', emoji: '💧', priceRange: [3, 5] }, { name: 'Gaseosa', emoji: '🥤', priceRange: [6, 9] }, { name: 'Té', emoji: '🍵', priceRange: [10, 15] }, { name: 'Limonada', emoji: '🍋', priceRange: [8,12] }, { name: 'Vino', emoji: '🍷', priceRange: [25,35] }, { name: 'Cerveza', emoji: '🍺', priceRange: [10,15] }, { name: 'Coctel', emoji: '🍸', priceRange: [15,20] }, { name: 'Whisky', emoji: '🥃', priceRange: [50,70] }, { name: 'Ginebra', emoji: '🍸', priceRange: [45,65] } ], meats: [ { name: 'Pollo', emoji: '🍗', priceRange: [20, 30] }, { name: 'Carne', emoji: '🥩', priceRange: [30, 40] }, { name: 'Salchicha', emoji: '🌭', priceRange: [2, 4] }, { name: 'Jamón', emoji: '🍖', priceRange: [15, 20] }, { name: 'Pescado', emoji: '🐟', priceRange: [25, 35] }, { name: 'Bacon', emoji: '🥓', priceRange: [18,25] }, { name: 'Camarón', emoji: '🍤', priceRange: [35,45] }, { name: 'Cangrejo', emoji: '🦀', priceRange: [40,50] }, { name: 'Costilla', emoji: '🍖', priceRange: [28,38] }, { name: 'Pavo', emoji: '🦃', priceRange: [50,60] } ], snacks: [ { name: 'Chocolate', emoji: '🍫', priceRange: [8, 12] }, { name: 'Papas Fritas', emoji: '🍟', priceRange: [5, 8] }, { name: 'Palomitas', emoji: '🍿', priceRange: [6, 10] }, { name: 'Maní', emoji: '🥜', priceRange: [4, 7] }, { name: 'Rosquilla', emoji: '🍩', priceRange: [5,9] }, { name: 'Sushi', emoji: '🍣', priceRange: [15,25] }, { name: 'Taco', emoji: '🌮', priceRange: [12,18] }, { name: 'Pizza', emoji: '🍕', priceRange: [30,40] }, { name: 'Hamburguesa', emoji: '🍔', priceRange: [20,30] }, { name: 'Hotdog', emoji: '🌭', priceRange: [15,22] } ], cleaning: [ { name: 'Jabón', emoji: '🧼', priceRange: [5, 8] }, { name: 'Champú', emoji: '🧴', priceRange: [15, 20] }, { name: 'Detergente', emoji: '✨', priceRange: [18, 25] }, { name: 'Esponja', emoji: '🧽', priceRange: [3, 6] }, { name: 'Papel Hig.', emoji: '🧻', priceRange: [12, 18] }, { name: 'Cepillo', emoji: '🧹', priceRange: [8,12] }, { name: 'Pasta D.', emoji: '🦷', priceRange: [10,15] }, { name: 'Rastrillo', emoji: '🪒', priceRange: [7,11] }, { name: 'Escoba', emoji: '🧹', priceRange: [20,30] }, { name: 'Cubo', emoji: '🗑️', priceRange: [25,35] } ], };
             const LEVEL_THEMES = [ 'fruits', 'vegetables', 'bakery', 'dairy', 'pantry', 'drinks', 'meats', 'snacks', 'cleaning', 'all' ];
             const LEVEL_CONFIG = [ { name: 'Fácil', minItems: 2, maxItems: 3, scenarios: ['total_cost'] }, { name: 'Fácil', minItems: 2, maxItems: 4, scenarios: ['total_cost', 'single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 4, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 3, maxItems: 5, scenarios: ['single_bill'] }, { name: 'Normal', minItems: 4, maxItems: 5, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 4, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 6, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Difícil', minItems: 5, maxItems: 7, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Experto', minItems: 6, maxItems: 8, scenarios: ['single_bill', 'multi_bill'] }, { name: 'Súper Hard', minItems: 7, maxItems: 10, scenarios: ['single_bill', 'multi_bill'] }, ];
             const RESULT_ICONS = { success: `<path d="M38.7,80.2L12.2,53.7c-1.6-1.6-1.6-4.1,0-5.7l5.7-5.7c1.6-1.6,4.1-1.6,5.7,0L38.7,58l32-32c1.6-1.6,4.1-1.6,5.7,0l5.7,5.7c1.6,1.6,1.6,4.1,0,5.7L44.3,80.2C42.8,81.8,40.2,81.8,38.7,80.2z"/>`, failure: `<path d="M80.2,74.5L61.3,55.6l18.9-18.9c-1.6-1.6-1.6-4.1,0-5.7l-5.7-5.7c-1.6-1.6-4.1-1.6-5.7,0L50,44.3L31.1,25.5c-1.6-1.6-4.1-1.6-5.7,0l-5.7,5.7c-1.6,1.6-1.6,4.1,0,5.7l18.9,18.9L19.8,74.5c-1.6-1.6-1.6,4.1,0,5.7l5.7,5.7c1.6,1.6,4.1,1.6,5.7,0l18.9-18.9l18.9,18.9c1.6,1.6,4.1,1.6,5.7,0l5.7-5.7C81.8,78.6,81.8,76,80.2,74.5z"/>` };
             
             const AudioManager = {
-                audioCtx: null,
-                isInitialized: false,
-                init() {
-                    if (this.isInitialized || !appState.isSoundEnabled) return;
-                    try {
-                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        this.isInitialized = true;
-                    } catch (e) {
-                        console.error("Web Audio API is not supported in this browser");
-                        appState.isSoundEnabled = false; 
-                    }
-                },
-                playSound(type) {
-                    if (!appState.isSoundEnabled || !this.isInitialized) return;
-                    
-                    const now = this.audioCtx.currentTime;
-                    const oscillator = this.audioCtx.createOscillator();
-                    const gainNode = this.audioCtx.createGain();
-                    gainNode.connect(this.audioCtx.destination);
-                    oscillator.connect(gainNode);
-
-                    switch (type) {
-                        case 'click':
-                            oscillator.type = 'sine';
-                            oscillator.frequency.setValueAtTime(600, now);
-                            gainNode.gain.setValueAtTime(0.2, now);
-                            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
-                            oscillator.start(now);
-                            oscillator.stop(now + 0.1);
-                            break;
-                        case 'success':
-                            oscillator.type = 'sine';
-                            oscillator.frequency.setValueAtTime(523.25, now);
-                            oscillator.frequency.linearRampToValueAtTime(1046.50, now + 0.2);
-                            gainNode.gain.setValueAtTime(0.2, now);
-                            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-                            oscillator.start(now);
-                            oscillator.stop(now + 0.2);
-                            break;
-                        case 'error':
-                            oscillator.type = 'square';
-                            oscillator.frequency.setValueAtTime(440, now);
-                            oscillator.frequency.exponentialRampToValueAtTime(120, now + 0.3);
-                            gainNode.gain.setValueAtTime(0.15, now);
-                            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
-                            oscillator.start(now);
-                            oscillator.stop(now + 0.3);
-                            break;
-                        case 'transition':
-                             oscillator.type = 'sine';
-                            oscillator.frequency.setValueAtTime(200, now);
-                            oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.2);
-                            gainNode.gain.setValueAtTime(0.1, now);
-                            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-                            oscillator.start(now);
-                            oscillator.stop(now + 0.2);
-                            break;
-                    }
-                },
-                toggleMute(isMuted) {
-                    appState.isSoundEnabled = !isMuted;
-                    if(appState.isSoundEnabled && !this.isInitialized) {
-                        this.init();
-                    }
-                    DOM.titleSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF;
-                    DOM.mainSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF;
-                    saveState();
-                }
+                audioCtx: null, isInitialized: false,
+                init() { if (this.isInitialized || !appState.isSoundEnabled) return; try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); this.isInitialized = true; } catch (e) { console.error("Web Audio API is not supported in this browser"); appState.isSoundEnabled = false; } },
+                playSound(type) { if (!appState.isSoundEnabled || !this.isInitialized) return; const now = this.audioCtx.currentTime; const oscillator = this.audioCtx.createOscillator(); const gainNode = this.audioCtx.createGain(); gainNode.connect(this.audioCtx.destination); oscillator.connect(gainNode); switch (type) { case 'click': oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(600, now); gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1); oscillator.start(now); oscillator.stop(now + 0.1); break; case 'success': oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(523.25, now); oscillator.frequency.linearRampToValueAtTime(1046.50, now + 0.2); gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2); oscillator.start(now); oscillator.stop(now + 0.2); break; case 'error': oscillator.type = 'square'; oscillator.frequency.setValueAtTime(440, now); oscillator.frequency.exponentialRampToValueAtTime(120, now + 0.3); gainNode.gain.setValueAtTime(0.15, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); oscillator.start(now); oscillator.stop(now + 0.3); break; case 'transition': oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(200, now); oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.2); gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2); oscillator.start(now); oscillator.stop(now + 0.2); break; } },
+                toggleMute(isMuted) { appState.isSoundEnabled = !isMuted; if(appState.isSoundEnabled && !this.isInitialized) this.init(); DOM.titleSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF; DOM.mainSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF; saveState(); }
             };
             
             function saveState() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(appState)); } catch (e) { console.error("Failed to save state:", e); } }
             function loadState() { try { const savedData = localStorage.getItem(SAVE_KEY); if (savedData) { const parsedData = JSON.parse(savedData); if (parsedData) { appState.playerName = parsedData.playerName || ''; appState.isSoundEnabled = parsedData.isSoundEnabled ?? true; appState.anomalyChance = parsedData.anomalyChance || ANOMALY_BASE_CHANCE; if(parsedData.preferences) appState.preferences = parsedData.preferences; if (Array.isArray(parsedData.levels) && parsedData.levels.length === appState.levels.length) { appState.levels = parsedData.levels.map(level => ({ ...level, livesLeft: level.livesLeft ?? LIVES_PER_LEVEL, shields: level.shields ?? 0 })); } } } } catch (e) { console.error("Could not load save data. Starting fresh.", e); localStorage.removeItem(SAVE_KEY); } }
             
             const UIManager = {
-                goToScreen(screenId) { 
-                    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
-                    const screen = document.getElementById(screenId); 
-                    if (screen) {
-                        AudioManager.playSound('transition');
-                        screen.classList.add('active'); 
-                        activeScreenId = screenId;
-                        this.applyTypewriterEffect(screen);
-                    }
-                    if (screenId === 'screen-game') { setTimeout(this.adjustGameLayout, 50); }
-                    if (screenId === 'screen-level-select') { this.checkAndSetLayoutMode(); }
-                },
-                showAnomalyAlert(title, message, callback) {
-                    DOM.anomalyAlertTitle.textContent = `// ${title} //`;
-                    DOM.anomalyAlertMessage.innerHTML = message;
-                    DOM.anomalyAlert.style.display = 'flex';
-                    UIManager.triggerAnimation(DOM.anomalyAlert.querySelector('#anomaly-alert-content'), 'pop-in');
-                    setTimeout(() => {
-                        DOM.anomalyAlert.style.display = 'none';
-                        if (callback) callback();
-                    }, 3500);
-                },
-                applyTypewriterEffect(screen) {
-                    const element = screen.querySelector('.typewriter-effect');
-                    if (element && !element.hasAttribute('data-typed')) {
-                        const text = element.textContent;
-                        element.textContent = '';
-                        element.classList.add('typing-cursor');
-                        typewriter(element, text, 50, () => {
-                            element.classList.remove('typing-cursor');
-                            element.setAttribute('data-typed', 'true');
-                        });
-                    }
-                },
-                adjustGameLayout() { if (DOM.problemContainer) { const availableHeight = window.innerHeight - document.getElementById('action-bar').offsetHeight - document.getElementById('game-hud').offsetHeight - 40; DOM.problemContainer.style.maxHeight = `${availableHeight}px`; } },
-                checkAndSetLayoutMode() {
-                    setTimeout(() => {
-                        DOM.levelSelectGrid.classList.remove('list-mode', 'grid-mode');
-                        DOM.levelSelectGrid.classList.add('grid-mode');
-                        const wrapperHeight = DOM.levelSelectWrapper.clientHeight;
-                        const contentHeight = DOM.levelSelectWrapper.scrollHeight;
-                        if (contentHeight > wrapperHeight) {
-                            DOM.levelSelectGrid.classList.remove('grid-mode');
-                            DOM.levelSelectGrid.classList.add('list-mode');
-                        }
-                    }, 0);
-                },
-                renderLevelSelect() {
-                    DOM.levelSelectGrid.innerHTML = '';
-                    appState.levels.forEach((level, index) => {
-                        const btn = document.createElement('button'); btn.className = 'level-btn'; btn.dataset.levelIndex = index;
-                        if (!level.unlocked) { btn.classList.add('locked'); btn.disabled = true; }
-                        const isMastered = level.stars === 3;
-                        const theme = LEVEL_THEMES[index] || 'Mixta';
-                        const starsHTML = '⭐'.repeat(level.stars) + '☆'.repeat(3 - level.stars);
-                        btn.innerHTML = `<div class="level-info-wrapper"><div class="level-title">Nivel ${index + 1}</div><div class="level-theme">${theme.charAt(0).toUpperCase() + theme.slice(1)}</div></div><div class="level-status-wrapper"><div class="level-stars">${starsHTML}</div><span class="level-icon">${isMastered ? '🏆' : (level.unlocked ? '✅' : '🔒')}</span></div>`;
-                        DOM.levelSelectGrid.appendChild(btn);
-                    });
-                    const lastLevelMastered = appState.levels.length > 0 && appState.levels[appState.levels.length - 1].stars === 3;
-                    DOM.btnInfiniteMode.style.display = lastLevelMastered ? 'block' : 'none';
-                    this.checkAndSetLayoutMode();
-                },
-                renderProfile() { 
-                    DOM.profilePlayerName.textContent = appState.playerName; 
-                    const totalStars = appState.levels.reduce((sum, level) => sum + level.stars, 0); 
-                    const masteredLevels = appState.levels.filter(level => level.stars === 3).length; 
-                    DOM.profileTotalStars.textContent = totalStars; 
-                    DOM.profileMasteredLevels.textContent = masteredLevels;
-                    
-                    DOM.arsenalSection.style.display = masteredLevels > 0 ? 'block' : 'none';
-                    DOM.colorPaletteGroup.style.display = masteredLevels >= 3 ? 'block' : 'none';
-                    DOM.numpadStyleGroup.style.display = masteredLevels >= 7 ? 'block' : 'none';
-
-                    DOM.colorOptions.innerHTML = '';
-                    Object.keys(THEMES).filter(t => t !== 'gold').forEach(themeKey => {
-                        const btn = document.createElement('button');
-                        btn.className = `arsenal-btn ${appState.preferences.theme === themeKey ? 'selected' : ''}`;
-                        btn.dataset.theme = themeKey;
-                        btn.textContent = themeKey.charAt(0).toUpperCase() + themeKey.slice(1);
-                        btn.style.borderColor = THEMES[themeKey].primary;
-                        DOM.colorOptions.appendChild(btn);
-                    });
-                    
-                    DOM.numpadOptions.innerHTML = '';
-                    NUMPAD_STYLES.forEach(styleKey => {
-                        const btn = document.createElement('button');
-                        btn.className = `arsenal-btn ${appState.preferences.numpadStyle === styleKey ? 'selected' : ''}`;
-                        btn.dataset.style = styleKey;
-                        btn.textContent = styleKey.charAt(0).toUpperCase() + styleKey.slice(1);
-                        DOM.numpadOptions.appendChild(btn);
-                    });
-                },
+                goToScreen(screenId) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); const screen = document.getElementById(screenId); if (screen) { AudioManager.playSound('transition'); screen.classList.add('active'); activeScreenId = screenId; this.applyTypewriterEffect(screen); } },
+                showAnomalyAlert(title, message, callback) { DOM.anomalyAlertTitle.textContent = `// ${title} //`; DOM.anomalyAlertMessage.innerHTML = message; DOM.anomalyAlert.style.display = 'flex'; UIManager.triggerAnimation(DOM.anomalyAlert.querySelector('#anomaly-alert-content'), 'pop-in'); setTimeout(() => { DOM.anomalyAlert.style.display = 'none'; if (callback) callback(); }, 3500); },
+                applyTypewriterEffect(screen) { const el = screen.querySelector('.typewriter-effect'); if (el && !el.hasAttribute('data-typed')) { const text = el.textContent; el.textContent = ''; el.classList.add('typing-cursor'); typewriter(el, text, 50, () => { el.classList.remove('typing-cursor'); el.setAttribute('data-typed', 'true'); }); } },
+                renderLevelSelect() { DOM.levelSelectGrid.innerHTML = ''; appState.levels.forEach((level, index) => { const btn = document.createElement('button'); btn.className = 'level-btn'; btn.dataset.levelIndex = index; if (!level.unlocked) { btn.classList.add('locked'); btn.disabled = true; } const isMastered = level.stars === 3; const theme = LEVEL_THEMES[index] || 'Mixta'; const starsHTML = '⭐'.repeat(level.stars) + '☆'.repeat(3 - level.stars); btn.innerHTML = `<div class="level-info-wrapper"><div class="level-title">Nivel ${index + 1}</div><div class="level-theme">${theme.charAt(0).toUpperCase() + theme.slice(1)}</div></div><div class="level-status-wrapper"><div class="level-stars">${starsHTML}</div><span class="level-icon">${isMastered ? '🏆' : (level.unlocked ? '✅' : '🔒')}</span></div>`; DOM.levelSelectGrid.appendChild(btn); }); const lastLevelMastered = appState.levels.length > 0 && appState.levels[appState.levels.length - 1].stars === 3; DOM.btnInfiniteMode.style.display = lastLevelMastered ? 'block' : 'none'; },
                 updateNameDisplay() { DOM.nameDisplay.textContent = appState.playerName || '_'; document.getElementById('name-confirm-key').classList.toggle('disabled', appState.playerName.length === 0); },
                 updateAnswerDisplay() { const canConfirm = appState.userAnswer.length > 0; DOM.answerDisplay.textContent = appState.userAnswer || '_'; if(DOM.numpadEnter) DOM.numpadEnter.classList.toggle('disabled', !canConfirm); },
                 triggerAnimation(element, animationClass) { if(element) { element.classList.remove(animationClass); void element.offsetWidth; element.classList.add(animationClass); } },
-                applyPreferences() {
-                    const theme = (appState.gameMode === 'infinite' && appState.levels.every(l => l.stars === 3)) 
-                        ? THEMES.gold 
-                        : THEMES[appState.preferences.theme] || THEMES.cyan;
-                    
-                    document.documentElement.style.setProperty('--color-primary', theme.primary);
-                    document.documentElement.style.setProperty('--color-primary-dark', theme.dark);
-
-                    DOM.numpadGrid.classList.remove(...NUMPAD_STYLES);
-                    DOM.numpadGrid.classList.add(appState.preferences.numpadStyle);
-                }
+                applyPreferences() { const theme = (appState.gameMode === 'infinite' && appState.levels.every(l => l.stars === 3)) ? THEMES.gold : THEMES[appState.preferences.theme] || THEMES.cyan; document.documentElement.style.setProperty('--color-primary', theme.primary); document.documentElement.style.setProperty('--color-primary-dark', theme.dark); DOM.numpadGrid.classList.remove(...NUMPAD_STYLES); DOM.numpadGrid.classList.add(appState.preferences.numpadStyle); }
             };
 
             const GameManager = {
-                _createProductCard(item) {
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'product-card';
-                    if (item.isDefective) itemEl.classList.add('defective');
-                    if (item.isFree) itemEl.classList.add('free');
-                    if (item.isDoubled) itemEl.classList.add('doubled');
-
-                    const emojiContainer = document.createElement('div');
-                    emojiContainer.className = 'product-emoji-container';
-                    emojiContainer.textContent = item.emoji;
-
-                    const priceEl = document.createElement('div');
-                    priceEl.className = 'product-price';
-                    priceEl.textContent = `${item.price} Bs.`;
-
-                    itemEl.appendChild(emojiContainer);
-                    itemEl.appendChild(priceEl);
-                    return itemEl;
-                },
-                startNewMission(levelIndex) {
-                    appState.gameMode = 'campaign';
-                    appState.currentLevelIndex = levelIndex;
-                    appState.userAnswer = ''; 
-                    appState.currentAttempts = 1;
-
-                    this.generateProblem();
-                    
-                    if (appState.currentAnomaly) {
-                        UIManager.showAnomalyAlert(appState.currentAnomaly.title, appState.currentAnomaly.message, () => {
-                            this.renderProblem(); 
-                            this.updateHUD(); 
-                            UIManager.updateAnswerDisplay();
-                            UIManager.goToScreen('screen-game');
-                        });
-                    } else {
-                        this.renderProblem(); 
-                        this.updateHUD(); 
-                        UIManager.updateAnswerDisplay(); 
-                        UIManager.goToScreen('screen-game');
-                    }
-                },
-                startInfiniteMode() {
-                    appState.gameMode = 'infinite';
-                    appState.infiniteStreak = 0;
-                    appState.userAnswer = ''; 
-                    this.generateProblem();
-                    this.renderProblem(); 
-                    this.updateHUD(); 
-                    UIManager.updateAnswerDisplay(); 
-                    UIManager.goToScreen('screen-game');
-                },
-                updateHUD() {
-                    UIManager.applyPreferences();
-                    DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; 
-                    DOM.hudStreak.style.display = 'none'; 
-                    DOM.hudWinsTracker.style.display = 'none';
-                    DOM.hudLives.style.display = 'none';
-                    DOM.hudShield.style.display = 'none';
-
-                    if (appState.gameMode === 'infinite') { 
-                        DOM.hudDifficulty.textContent = 'RACHA DORADA ♾️'; 
-                        DOM.hudStreak.className = 'hud-tag'; 
-                        DOM.hudStreak.textContent = `Racha: ${appState.infiniteStreak}`; 
-                        DOM.hudStreak.style.display = 'inline-block'; 
-                    } else {
-                        const level = appState.levels[appState.currentLevelIndex];
-                        DOM.hudDifficulty.textContent = `Nivel ${appState.currentLevelIndex + 1}: ${LEVEL_CONFIG[appState.currentLevelIndex].name}`; 
-                        
-                        DOM.hudWinsTracker.style.display = 'flex'; 
-                        DOM.hudWinsTracker.innerHTML = ''; 
-                        for (let i = 0; i < WINS_TO_MASTER; i++) { 
-                            const dot = document.createElement('div'); 
-                            dot.className = `win-dot ${i < level.wins ? 'filled' : ''}`; 
-                            DOM.hudWinsTracker.appendChild(dot); 
-                        }
-
-                        DOM.hudLives.style.display = 'flex';
-                        DOM.hudLives.innerHTML = '';
-                        for(let i=0; i < LIVES_PER_LEVEL; i++){
-                            const lifeEl = document.createElement('span');
-                            lifeEl.className = 'life';
-                            lifeEl.textContent = '❤️';
-                            if(i >= level.livesLeft) lifeEl.classList.add('lost');
-                            DOM.hudLives.appendChild(lifeEl);
-                        }
-                        
-                        DOM.hudShield.style.display = level.shields > 0 ? 'block' : 'none';
-                        DOM.hudShield.textContent = `🛡️`.repeat(level.shields);
-                    }
-                },
-                generateProblem() {
-                    appState.currentAnomaly = null;
-                    let items = this.generateItems();
-                    
-                    if(appState.gameMode === 'campaign' && Math.random() < appState.anomalyChance) {
-                       this.applyAnomaly(items);
-                       appState.anomalyChance = ANOMALY_BASE_CHANCE;
-                    } else if (appState.gameMode === 'campaign') {
-                       appState.anomalyChance += ANOMALY_CHANCE_INCREASE;
-                    }
-                    saveState();
-                    
-                    const validItems = items.filter(item => !item.isDefective);
-                    let baseTotalCost = validItems.reduce((sum, item) => sum + item.totalPrice, 0);
-                    let finalTotalCost = baseTotalCost;
-                    
-                    if(appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
-                        finalTotalCost -= appState.currentAnomaly.value;
-                        if (finalTotalCost < 0) finalTotalCost = 0;
-                    }
-
-                    const { payment, paymentText, change, questionText, titleText, scenario } = this.generatePaymentAndQuestion(finalTotalCost); 
-                    const explanation = this.generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario});
-                    
-                    appState.currentProblem = { items, totalCost: finalTotalCost, payment, paymentText, questionText, titleText, answer: change, explanation, scenario }; 
-                },
+                _createProductCard(item) { const itemEl = document.createElement('div'); itemEl.className = 'product-card'; if (item.isDefective) itemEl.classList.add('defective'); if (item.isFree) itemEl.classList.add('free'); if (item.isDoubled) itemEl.classList.add('doubled'); itemEl.innerHTML = `<div class="product-emoji-container">${item.emoji}</div><div class="product-price">${item.price} Bs.</div>`; return itemEl; },
+                startNewMission(levelIndex) { appState.gameMode = 'campaign'; appState.currentLevelIndex = levelIndex; appState.userAnswer = ''; appState.currentAttempts = 1; this.generateProblem(); if (appState.currentAnomaly) { UIManager.showAnomalyAlert(appState.currentAnomaly.title, appState.currentAnomaly.message, () => { this.renderProblem(); this.updateHUD(); UIManager.updateAnswerDisplay(); UIManager.goToScreen('screen-game'); }); } else { this.renderProblem(); this.updateHUD(); UIManager.updateAnswerDisplay(); UIManager.goToScreen('screen-game'); } },
+                startInfiniteMode() { appState.gameMode = 'infinite'; appState.infiniteStreak = 0; appState.userAnswer = ''; this.generateProblem(); this.renderProblem(); this.updateHUD(); UIManager.updateAnswerDisplay(); UIManager.goToScreen('screen-game'); },
+                updateHUD() { UIManager.applyPreferences(); DOM.hudPlayerName.textContent = `👤 ${appState.playerName}`; DOM.hudStreak.style.display = 'none'; DOM.hudWinsTracker.style.display = 'none'; DOM.hudLives.style.display = 'none'; DOM.hudShield.style.display = 'none'; if (appState.gameMode === 'infinite') { DOM.hudDifficulty.textContent = 'RACHA DORADA ♾️'; DOM.hudStreak.textContent = `Racha: ${appState.infiniteStreak}`; DOM.hudStreak.style.display = 'inline-block'; } else { const level = appState.levels[appState.currentLevelIndex]; DOM.hudDifficulty.textContent = `Nivel ${appState.currentLevelIndex + 1}: ${LEVEL_CONFIG[appState.currentLevelIndex].name}`; DOM.hudWinsTracker.style.display = 'flex'; DOM.hudWinsTracker.innerHTML = ''; for (let i = 0; i < WINS_TO_MASTER; i++) { const dot = document.createElement('div'); dot.className = `win-dot ${i < level.wins ? 'filled' : ''}`; DOM.hudWinsTracker.appendChild(dot); } DOM.hudLives.style.display = 'flex'; DOM.hudLives.innerHTML = ''; for(let i=0; i < LIVES_PER_LEVEL; i++){ const lifeEl = document.createElement('span'); lifeEl.className = 'life'; lifeEl.textContent = '❤️'; if(i >= level.livesLeft) lifeEl.classList.add('lost'); DOM.hudLives.appendChild(lifeEl); } DOM.hudShield.style.display = level.shields > 0 ? 'block' : 'none'; DOM.hudShield.textContent = `🛡️`.repeat(level.shields); } },
+                generateProblem() { appState.currentAnomaly = null; let items = this.generateItems(); if(appState.gameMode === 'campaign' && Math.random() < appState.anomalyChance) { this.applyAnomaly(items); appState.anomalyChance = ANOMALY_BASE_CHANCE; } else if (appState.gameMode === 'campaign') { appState.anomalyChance += ANOMALY_CHANCE_INCREASE; } saveState(); const validItems = items.filter(item => !item.isDefective); let baseTotalCost = validItems.reduce((sum, item) => sum + item.totalPrice, 0); let finalTotalCost = baseTotalCost; if(appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') { finalTotalCost -= appState.currentAnomaly.value; if (finalTotalCost < 0) finalTotalCost = 0; } const { payment, paymentText, change, questionText, titleText, scenario } = this.generatePaymentAndQuestion(finalTotalCost); const explanation = this.generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario}); appState.currentProblem = { items, totalCost: finalTotalCost, payment, paymentText, questionText, titleText, answer: change, explanation, scenario }; },
+                
                 applyAnomaly(items) {
                     const possibleAnomalies = ['coupon', 'double', 'defective', 'free_expensive'];
                     const anomalyType = possibleAnomalies[getRandomInt(0, possibleAnomalies.length - 1)];
                     const levelIndex = appState.currentLevelIndex;
-
                     switch(anomalyType) {
-                        case 'coupon':
-                            let couponValue;
-                            if (levelIndex <= 2) couponValue = [2, 3][getRandomInt(0,1)];
-                            else if (levelIndex <= 6) couponValue = [5, 8][getRandomInt(0,1)];
-                            else couponValue = [10, 15][getRandomInt(0,1)];
-                            
-                            appState.currentAnomaly = { type: 'coupon', value: couponValue, title: '¡QUÉ SUERTE!', message: `${createCouponIcon(couponValue)}<span>Has encontrado un cupón de ${couponValue} Bs. de descuento.</span>` };
-                            break;
-                        case 'double':
-                            const itemToDouble = items[getRandomInt(0, items.length - 1)];
-                            itemToDouble.isDoubled = true;
-                            itemToDouble.totalPrice = itemToDouble.price * 2;
-                            appState.currentAnomaly = { type: 'double', item: itemToDouble, title: '¡CUIDADO!', message: `<span>El precio de la <b>${itemToDouble.name}</b> hoy es el doble.</span>` };
-                            break;
-                        case 'defective':
-                             if (items.length > 2) {
-                                const itemToMark = items[getRandomInt(0, items.length - 1)];
-                                itemToMark.isDefective = true;
-                                itemToMark.totalPrice = 0;
-                                appState.currentAnomaly = { type: 'defective', item: itemToMark, title: '¡ATENCIÓN!', message: `<span>El artículo <b>${itemToMark.name}</b> está en mal estado. ¡No puedes comprarlo!</span>` };
-                            }
-                            break;
-                        case 'free_expensive':
-                            if (items.length > 1) {
-                                let expensiveItem = items.reduce((max, item) => item.price > max.price ? item : max, items[0]);
-                                expensiveItem.isFree = true;
-                                expensiveItem.totalPrice = 0;
-                                appState.currentAnomaly = { type: 'free_expensive', item: expensiveItem, title: '¡DÍA DE SUERTE!', message: `<span>¡El artículo más caro, <b>${expensiveItem.name}</b>, es GRATIS!</span>` };
-                            }
-                            break;
+                        case 'coupon': let couponValue; if (levelIndex <= 2) couponValue = [2, 3][getRandomInt(0,1)]; else if (levelIndex <= 6) couponValue = [5, 8][getRandomInt(0,1)]; else couponValue = [10, 15][getRandomInt(0,1)]; appState.currentAnomaly = { type: 'coupon', value: couponValue, title: '¡QUÉ SUERTE!', message: `${createCouponIcon(couponValue)}<span>Has encontrado un cupón de ${couponValue} Bs. de descuento.</span>` }; break;
+                        case 'double': const itemToDouble = items[getRandomInt(0, items.length - 1)]; itemToDouble.isDoubled = true; itemToDouble.totalPrice = itemToDouble.price * 2; appState.currentAnomaly = { type: 'double', item: itemToDouble, title: '¡CUIDADO!', message: `<div class="anomaly-emoji">${itemToDouble.emoji}</div><span>El precio de la <b>${itemToDouble.name}</b> hoy es el doble.</span>` }; break;
+                        case 'defective': if (items.length > 2) { const itemToMark = items[getRandomInt(0, items.length - 1)]; itemToMark.isDefective = true; itemToMark.totalPrice = 0; appState.currentAnomaly = { type: 'defective', item: itemToMark, title: '¡ATENCIÓN!', message: `<div class="anomaly-emoji">${itemToMark.emoji}</div><span>El artículo <b>${itemToMark.name}</b> está en mal estado. ¡No puedes comprarlo!</span>` }; } break;
+                        case 'free_expensive': if (items.length > 1) { let expensiveItem = items.reduce((max, item) => item.price > max.price ? item : max, items[0]); expensiveItem.isFree = true; expensiveItem.totalPrice = 0; appState.currentAnomaly = { type: 'free_expensive', item: expensiveItem, title: '¡DÍA DE SUERTE!', message: `<div class="anomaly-emoji">${expensiveItem.emoji}</div><span>¡El artículo más caro, <b>${expensiveItem.name}</b>, es GRATIS!</span>` }; } break;
                     }
                 },
-                generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario}) {
-                    let explanation = "Cálculo de la compra:\n";
-                    const validItems = items.filter(i => !i.isDefective);
-                    explanation += validItems.map(i => {
-                        if (i.isFree) return `${i.name}: ${i.price} Bs. (GRATIS, se suma 0)`;
-                        if (i.isDoubled) return `${i.name}: ${i.price} x 2 = ${i.totalPrice} Bs.`;
-                        return `${i.name}: ${i.price} Bs.`;
-                    }).join('\n');
-                    
-                    explanation += `\n-----------------------\n`;
-
-                    if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
-                        explanation += `Suma de Productos: ${baseTotalCost} Bs.\n`;
-                        explanation += `Descuento del Cupón: -${appState.currentAnomaly.value} Bs.\n`;
-                        explanation += `Costo Final: ${baseTotalCost} - ${appState.currentAnomaly.value} = ${finalTotalCost} Bs.`;
-                    } else {
-                         explanation += (scenario === 'total_cost') ? `Coste Total: ${finalTotalCost} Bs.` : `Suma de Productos: ${finalTotalCost} Bs.`;
-                    }
-                    
-                    if(scenario !== 'total_cost'){
-                         explanation += `\n\nPago con billete de: ${payment} Bs.\nCambio: ${payment} - ${finalTotalCost} = ${change} Bs.`;
-                    }
-                    return explanation;
-                },
+                generateExplanation({items, baseTotalCost, finalTotalCost, payment, change, scenario}) { let explanation = "Cálculo de la compra:\n"; const validItems = items.filter(i => !i.isDefective); explanation += validItems.map(i => { if (i.isFree) return `${i.name}: ${i.price} Bs. (GRATIS, se suma 0)`; if (i.isDoubled) return `${i.name}: ${i.price} x 2 = ${i.totalPrice} Bs.`; return `${i.name}: ${i.price} Bs.`; }).join('\n'); explanation += `\n-----------------------\n`; if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') { explanation += `Suma de Productos: ${baseTotalCost} Bs.\nDescuento del Cupón: -${appState.currentAnomaly.value} Bs.\nCosto Final: ${baseTotalCost} - ${appState.currentAnomaly.value} = ${finalTotalCost} Bs.`; } else { explanation += (scenario === 'total_cost') ? `Coste Total: ${finalTotalCost} Bs.` : `Suma de Productos: ${finalTotalCost} Bs.`; } if(scenario !== 'total_cost'){ explanation += `\n\nPago con billete de: ${payment} Bs.\nCambio: ${payment} - ${finalTotalCost} = ${change} Bs.`; } return explanation; },
+                
                 renderProblem() {
                     if(!appState.currentProblem) return;
                     const { items, titleText, paymentText, questionText } = appState.currentProblem;
                     DOM.problemContainer.innerHTML = '';
-
-                    const titleEl = document.createElement('div');
-                    titleEl.className = 'problem-title';
-                    titleEl.textContent = titleText;
-                    DOM.problemContainer.appendChild(titleEl);
-
-                    const itemListEl = document.createElement('div');
-                    itemListEl.className = 'problem-item-list';
+                    const titleEl = document.createElement('div'); titleEl.className = 'problem-title'; titleEl.textContent = titleText;
+                    const itemListEl = document.createElement('div'); itemListEl.className = 'problem-item-list';
                     items.forEach(item => { itemListEl.appendChild(this._createProductCard(item)); });
+                    
+                    DOM.problemContainer.appendChild(titleEl);
                     DOM.problemContainer.appendChild(itemListEl);
-
-                    if (paymentText) {
-                        const paymentEl = document.createElement('div');
-                        paymentEl.className = 'problem-payment';
-                        paymentEl.textContent = paymentText;
-                        DOM.problemContainer.appendChild(paymentEl);
+                    
+                    if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
+                        const couponIndicator = document.createElement('div');
+                        couponIndicator.id = 'coupon-indicator';
+                        couponIndicator.innerHTML = `${createCouponIcon(appState.currentAnomaly.value)} <span>Cupón Activo</span>`;
+                        DOM.problemContainer.appendChild(couponIndicator);
                     }
                     
-                    const couponIndicator = document.createElement('div');
-                    couponIndicator.id = 'coupon-indicator';
-                    if (appState.currentAnomaly && appState.currentAnomaly.type === 'coupon') {
-                        couponIndicator.style.display = 'flex';
-                        couponIndicator.innerHTML = `${createCouponIcon(appState.currentAnomaly.value)} <span>Cupón Activo</span>`;
-                    } else {
-                        couponIndicator.style.display = 'none';
-                    }
-                    DOM.problemContainer.appendChild(couponIndicator);
-
-
-                    const questionEl = document.createElement('div');
-                    questionEl.className = 'problem-question';
-                    questionEl.textContent = questionText;
+                    if (paymentText) { const paymentEl = document.createElement('div'); paymentEl.className = 'problem-payment'; paymentEl.textContent = paymentText; DOM.problemContainer.appendChild(paymentEl); }
+                    const questionEl = document.createElement('div'); questionEl.className = 'problem-question'; questionEl.textContent = questionText;
                     DOM.problemContainer.appendChild(questionEl);
                 },
-                generateItems() {
-                    let config, availableProducts;
-                    if (appState.gameMode === 'infinite') { config = LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)]; const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; }
-                    else { config = LEVEL_CONFIG[appState.currentLevelIndex]; const theme = LEVEL_THEMES[appState.currentLevelIndex] || 'all'; if (theme !== 'all' && THEMED_PRODUCTS[theme]) { availableProducts = [...THEMED_PRODUCTS[theme]]; } else { const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; } }
-                    let numItems = getRandomInt(config.minItems, config.maxItems); let selectedProducts = [];
-                    for (let i = 0; i < numItems; i++) { let productIndex = getRandomInt(0, availableProducts.length - 1); selectedProducts.push(JSON.parse(JSON.stringify(availableProducts[productIndex]))); }
-                    return selectedProducts.map(product => { const price = appState.sessionPriceList[product.name]; product.price = price; product.totalPrice = price; return product; }).sort((a, b) => b.price - a.price);
-                },
-                generatePaymentAndQuestion(totalCost) {
-                    const config = (appState.gameMode === 'infinite') ? LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)] : LEVEL_CONFIG[appState.currentLevelIndex];
-                    const scenario = config.scenarios[getRandomInt(0, config.scenarios.length - 1)];
-                    const bills = [10, 20, 50, 100, 200]; 
-                    let payment = 0, paymentText = '', change = 0, questionText = '';
-                    
-                    if (scenario === 'total_cost' || totalCost < 5) {
-                        payment = totalCost;
-                        change = totalCost; 
-                        questionText = '¿Cuánto debes pagar en total?';
-                    } else { 
-                        let initialPayment = 0; 
-                        if (scenario === 'single_bill') { 
-                            initialPayment = bills.find(b => b > totalCost) || (Math.ceil(totalCost / 10) * 10); 
-                        } else if (scenario === 'multi_bill') { 
-                            let baseBill = [10, 20, 5].find(b => b * 2 > totalCost) || 10; initialPayment = baseBill * 2; 
-                        } 
-                        payment = initialPayment; 
-                        while (payment <= totalCost) { 
-                            payment = (bills.find(b => b > payment) || payment + 10); 
-                        } 
-                        change = payment - totalCost; 
-                        questionText = '¿Cuánto cambio deben darte?'; 
-                        if (scenario === 'multi_bill' && payment % 2 === 0 && payment > 20) {
-                            paymentText = `Pagas con dos billetes de ${payment/2} Bs.`; 
-                        } else {
-                            paymentText = `Pagas con un billete de ${payment} Bs.`; 
-                        }
-                    }
-                    const titles = ["🛒 Tu Ticket de Compra:", "📋 Misión de Compras:", "📝 Lista del Supermercado:"];
-                    return { payment, paymentText, change, questionText, titleText: titles[getRandomInt(0, titles.length - 1)], scenario };
-                },
-                checkAnswer() {
-                    const isCorrect = parseInt(appState.userAnswer) === appState.currentProblem.answer;
-                    
-                    if (isCorrect) {
-                        this.handleCorrectAnswer();
-                    } else {
-                        const level = appState.gameMode === 'campaign' ? appState.levels[appState.currentLevelIndex] : null;
-                        if (appState.gameMode === 'campaign' && ((level.shields > 0) || (level.livesLeft <= 1))) {
-                             this.handleIncorrectAnswer(false);
-                        } else {
-                             this.handleIncorrectAnswer(true);
-                        }
-                    }
-                },
-                handleCorrectAnswer() {
-                    AudioManager.playSound('success');
-                    if (appState.gameMode === 'infinite') {
-                        appState.infiniteStreak++;
-                        this.startInfiniteMode();
-                        return;
-                    }
-                    
-                    const level = appState.levels[appState.currentLevelIndex];
-                    const oldWins = level.wins;
-                    level.wins++;
-                    
-                    let earnedStar = false;
-                    let earnedShield = false;
-
-                    const starsMilestones = [4, 8, 12];
-                    starsMilestones.forEach((winsNeeded, index) => {
-                        if(oldWins < winsNeeded && level.wins >= winsNeeded && level.stars < (index + 1)) {
-                           level.stars = index + 1;
-                           earnedStar = true;
-                        }
-                    });
-
-                    const shieldMilestones = [4, 8];
-                    if(shieldMilestones.includes(level.wins)) {
-                        level.shields = (level.shields || 0) + 1;
-                        earnedShield = true;
-                    }
-
-                    saveState();
-
-                    DOM.resultScreen.className = `screen active success`;
-                    DOM.resultIcon.innerHTML = RESULT_ICONS.success;
-                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
-                    DOM.resultExplanation.style.display = 'block';
-                    DOM.resultTitle.textContent = '¡CORRECTO!';
-                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
-
-                    let unlockMsgText = '';
-                    if (earnedStar) unlockMsgText += `⭐ ¡ESTRELLA GANADA! ⭐\n`;
-                    if (earnedShield) unlockMsgText += `🛡️ ¡VELO DE SEGURIDAD OBTENIDO! 🛡️\n`;
-
-                    const isMastered = level.stars === 3;
-                    if (isMastered && appState.currentLevelIndex < appState.levels.length - 1) {
-                        const nextLevel = appState.levels[appState.currentLevelIndex + 1];
-                        if (!nextLevel.unlocked) { 
-                            nextLevel.unlocked = true; 
-                            unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`;
-                            saveState();
-                        }
-                    }
-                    
-                    DOM.unlockMessage.textContent = unlockMsgText;
-                    if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in');
-
-                    if (isMastered) {
-                        DOM.btnNextMission.textContent = 'Ir a Niveles';
-                        DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
-                    } else {
-                        DOM.btnNextMission.textContent = 'Siguiente Misión';
-                        DOM.btnNextMission.onclick = () => this.startNewMission(appState.currentLevelIndex);
-                    }
-                    UIManager.goToScreen('screen-result');
-                },
-                handleIncorrectAnswer(isInstant = false) {
-                    AudioManager.playSound('error');
-                    if(appState.gameMode === 'infinite'){
-                        this.handleInfiniteFailure();
-                        return;
-                    }
-
-                    const level = appState.levels[appState.currentLevelIndex];
-                    appState.currentAttempts++;
-                    
-                    let shieldWasUsed = false;
-                    if (level.shields > 0) {
-                        level.shields--;
-                        shieldWasUsed = true;
-                    } else {
-                        level.livesLeft--;
-                    }
-                    
-                    this.updateHUD();
-                    saveState();
-
-                    if(isInstant && !shieldWasUsed) {
-                        UIManager.triggerAnimation(DOM.answerDisplay, 'answer-error-flash');
-                        appState.userAnswer = '';
-                        setTimeout(() => UIManager.updateAnswerDisplay(), 400);
-                        return;
-                    }
-                    
-                    document.querySelectorAll('.typewriter-effect').forEach(el => el.removeAttribute('data-typed'));
-                    UIManager.goToScreen('screen-result');
-
-                    DOM.resultScreen.className = `screen active failure`;
-                    DOM.resultIcon.innerHTML = RESULT_ICONS.failure;
-                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
-                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
-                    DOM.resultExplanation.style.display = 'block';
-                    
-                    if (shieldWasUsed) {
-                        DOM.resultTitle.textContent = '¡ESCUDO ACTIVADO!';
-                        DOM.unlockMessage.textContent = 'Tu Velo de Seguridad absorbió el fallo. ¡No perdiste una vida!';
-                        DOM.btnNextMission.textContent = 'Siguiente Misión';
-                        DOM.btnNextMission.onclick = () => {
-                           this.startNewMission(appState.currentLevelIndex);
-                        };
-                        return;
-                    }
-
-                    if (level.livesLeft > 0) {
-                        DOM.resultTitle.textContent = 'CASI...';
-                        DOM.unlockMessage.textContent = `Te quedan ${level.livesLeft} ${level.livesLeft === 1 ? 'vida' : 'vidas'} para este nivel.`;
-                        DOM.btnNextMission.textContent = 'Siguiente Misión';
-                        DOM.btnNextMission.onclick = () => {
-                           this.startNewMission(appState.currentLevelIndex);
-                        };
-                    } else {
-                        level.wins = 0;
-                        level.livesLeft = LIVES_PER_LEVEL;
-                        level.shields = 0;
-                        saveState();
-                        DOM.resultTitle.textContent = 'VIDAS AGOTADAS';
-                        DOM.unlockMessage.textContent = 'Has agotado tus vidas.\nEl progreso de este nivel ha sido reiniciado.';
-                        DOM.btnNextMission.textContent = 'Volver a Niveles';
-                        DOM.btnNextMission.onclick = () => {
-                            UIManager.renderLevelSelect();
-                            UIManager.goToScreen('screen-level-select');
-                        };
-                    }
-                },
-                handleInfiniteFailure(){
-                    DOM.resultScreen.className = `screen active failure`;
-                    DOM.resultIcon.innerHTML = RESULT_ICONS.failure;
-                    UIManager.triggerAnimation(DOM.resultIcon, 'pop-in');
-                    DOM.resultExplanation.textContent = appState.currentProblem.explanation;
-                    DOM.resultExplanation.style.display = 'block';
-                    DOM.resultTitle.textContent = 'RACHA TERMINADA';
-                    DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`;
-                    DOM.btnNextMission.textContent = 'Volver al Menú';
-                    DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); };
-                }
+                generateItems() { let config, availableProducts; if (appState.gameMode === 'infinite') { config = LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)]; const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; } else { config = LEVEL_CONFIG[appState.currentLevelIndex]; const theme = LEVEL_THEMES[appState.currentLevelIndex] || 'all'; if (theme !== 'all' && THEMED_PRODUCTS[theme]) { availableProducts = [...THEMED_PRODUCTS[theme]]; } else { const allProducts = Object.values(THEMED_PRODUCTS).flat(); availableProducts = [...allProducts]; } } let numItems = getRandomInt(config.minItems, config.maxItems); let selectedProducts = []; for (let i = 0; i < numItems; i++) { let productIndex = getRandomInt(0, availableProducts.length - 1); selectedProducts.push(JSON.parse(JSON.stringify(availableProducts[productIndex]))); } return selectedProducts.map(product => { const price = appState.sessionPriceList[product.name]; product.price = price; product.totalPrice = price; return product; }).sort((a, b) => b.price - a.price); },
+                generatePaymentAndQuestion(totalCost) { const config = (appState.gameMode === 'infinite') ? LEVEL_CONFIG[getRandomInt(0, LEVEL_CONFIG.length - 1)] : LEVEL_CONFIG[appState.currentLevelIndex]; const scenario = config.scenarios[getRandomInt(0, config.scenarios.length - 1)]; const bills = [10, 20, 50, 100, 200]; let payment = 0, paymentText = '', change = 0, questionText = ''; if (scenario === 'total_cost' || totalCost < 5) { payment = totalCost; change = totalCost; questionText = '¿Cuánto debes pagar en total?'; } else { let initialPayment = 0; if (scenario === 'single_bill') { initialPayment = bills.find(b => b > totalCost) || (Math.ceil(totalCost / 10) * 10); } else if (scenario === 'multi_bill') { let baseBill = [10, 20, 5].find(b => b * 2 > totalCost) || 10; initialPayment = baseBill * 2; } payment = initialPayment; while (payment <= totalCost) { payment = (bills.find(b => b > payment) || payment + 10); } change = payment - totalCost; questionText = '¿Cuánto cambio deben darte?'; if (scenario === 'multi_bill' && payment % 2 === 0 && payment > 20) { paymentText = `Pagas con dos billetes de ${payment/2} Bs.`; } else { paymentText = `Pagas con un billete de ${payment} Bs.`; } } const titles = ["🛒 Tu Ticket de Compra:", "📋 Misión de Compras:", "📝 Lista del Supermercado:"]; return { payment, paymentText, change, questionText, titleText: titles[getRandomInt(0, titles.length - 1)], scenario }; },
+                checkAnswer() { const isCorrect = parseInt(appState.userAnswer) === appState.currentProblem.answer; if (isCorrect) this.handleCorrectAnswer(); else { const level = appState.gameMode === 'campaign' ? appState.levels[appState.currentLevelIndex] : null; if (appState.gameMode === 'campaign' && ((level.shields > 0) || (level.livesLeft <= 1))) this.handleIncorrectAnswer(false); else this.handleIncorrectAnswer(true); } },
+                handleCorrectAnswer() { AudioManager.playSound('success'); if (appState.gameMode === 'infinite') { appState.infiniteStreak++; this.startInfiniteMode(); return; } const level = appState.levels[appState.currentLevelIndex]; const oldWins = level.wins; level.wins++; let earnedStar = false, earnedShield = false; [4, 8, 12].forEach((winsNeeded, index) => { if(oldWins < winsNeeded && level.wins >= winsNeeded && level.stars < (index + 1)) { level.stars = index + 1; earnedStar = true; } }); if([4, 8].includes(level.wins)) { level.shields = (level.shields || 0) + 1; earnedShield = true; } saveState(); DOM.resultScreen.className = `screen active success`; DOM.resultIcon.innerHTML = RESULT_ICONS.success; UIManager.triggerAnimation(DOM.resultIcon, 'pop-in'); DOM.resultExplanation.style.display = 'block'; DOM.resultTitle.textContent = '¡CORRECTO!'; DOM.resultExplanation.textContent = appState.currentProblem.explanation; let unlockMsgText = ''; if (earnedStar) unlockMsgText += `⭐ ¡ESTRELLA GANADA! ⭐\n`; if (earnedShield) unlockMsgText += `🛡️ ¡VELO DE SEGURIDAD OBTENIDO! 🛡️\n`; const isMastered = level.stars === 3; if (isMastered && appState.currentLevelIndex < appState.levels.length - 1) { const nextLevel = appState.levels[appState.currentLevelIndex + 1]; if (!nextLevel.unlocked) { nextLevel.unlocked = true; unlockMsgText += `🏆 ¡NIVEL ${appState.currentLevelIndex + 2} DESBLOQUEADO! 🏆`; saveState(); } } DOM.unlockMessage.textContent = unlockMsgText; if(unlockMsgText) UIManager.triggerAnimation(DOM.unlockMessage, 'pop-in'); if (isMastered) { DOM.btnNextMission.textContent = 'Ir a Niveles'; DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); }; } else { DOM.btnNextMission.textContent = 'Siguiente Misión'; DOM.btnNextMission.onclick = () => this.startNewMission(appState.currentLevelIndex); } UIManager.goToScreen('screen-result'); },
+                handleIncorrectAnswer(isInstant = false) { AudioManager.playSound('error'); if(appState.gameMode === 'infinite'){ this.handleInfiniteFailure(); return; } const level = appState.levels[appState.currentLevelIndex]; appState.currentAttempts++; let shieldWasUsed = false; if (level.shields > 0) { level.shields--; shieldWasUsed = true; } else { level.livesLeft--; } this.updateHUD(); saveState(); if(isInstant && !shieldWasUsed) { UIManager.triggerAnimation(DOM.answerDisplay, 'answer-error-flash'); appState.userAnswer = ''; setTimeout(() => UIManager.updateAnswerDisplay(), 400); return; } document.querySelectorAll('.typewriter-effect').forEach(el => el.removeAttribute('data-typed')); UIManager.goToScreen('screen-result'); DOM.resultScreen.className = `screen active failure`; DOM.resultIcon.innerHTML = RESULT_ICONS.failure; UIManager.triggerAnimation(DOM.resultIcon, 'pop-in'); DOM.resultExplanation.textContent = appState.currentProblem.explanation; DOM.resultExplanation.style.display = 'block'; if (shieldWasUsed) { DOM.resultTitle.textContent = '¡ESCUDO ACTIVADO!'; DOM.unlockMessage.textContent = 'Tu Velo de Seguridad absorbió el fallo. ¡No perdiste una vida!'; DOM.btnNextMission.textContent = 'Siguiente Misión'; DOM.btnNextMission.onclick = () => { this.startNewMission(appState.currentLevelIndex); }; return; } if (level.livesLeft > 0) { DOM.resultTitle.textContent = 'CASI...'; DOM.unlockMessage.textContent = `Te quedan ${level.livesLeft} ${level.livesLeft === 1 ? 'vida' : 'vidas'} para este nivel.`; DOM.btnNextMission.textContent = 'Siguiente Misión'; DOM.btnNextMission.onclick = () => { this.startNewMission(appState.currentLevelIndex); }; } else { level.wins = 0; level.livesLeft = LIVES_PER_LEVEL; level.shields = 0; saveState(); DOM.resultTitle.textContent = 'MISIÓN FALLIDA'; DOM.unlockMessage.textContent = 'Has agotado todas tus vidas.\nEl progreso de victorias para este nivel ha sido reiniciado. ¡Pero no te rindas!'; DOM.btnNextMission.textContent = 'Volver a Niveles'; DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); }; } },
+                handleInfiniteFailure(){ DOM.resultScreen.className = `screen active failure`; DOM.resultIcon.innerHTML = RESULT_ICONS.failure; UIManager.triggerAnimation(DOM.resultIcon, 'pop-in'); DOM.resultExplanation.textContent = appState.currentProblem.explanation; DOM.resultExplanation.style.display = 'block'; DOM.resultTitle.textContent = 'RACHA TERMINADA'; DOM.unlockMessage.textContent = `Lograste una racha de ${appState.infiniteStreak}!`; DOM.btnNextMission.textContent = 'Volver al Menú'; DOM.btnNextMission.onclick = () => { UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); }; }
             };
             const VirtualKeyboard = {
                 init() { const keyLayout = { top: ['q','w','e','r','t','y','u','i','o','p'], middle: ['a','s','d','f','g','h','j','k','l','ñ'], bottom: ['SHIFT','z','x','c','v','b','n','m','BACKSPACE','✓'] }; DOM.keyboardContainer.innerHTML = ''; for (const row in keyLayout) { const rEl = document.createElement('div'); rEl.className = 'keyboard-row'; keyLayout[row].forEach(key => { const kEl = document.createElement('div'); kEl.className = 'key'; kEl.dataset.key = key; if (key.length > 1) { kEl.classList.add('function'); kEl.innerHTML = ICONS[key]; } else { kEl.textContent = key; } if(key === '✓'){ kEl.id = 'name-confirm-key'; kEl.classList.add('disabled'); } rEl.appendChild(kEl); }); DOM.keyboardContainer.appendChild(rEl); } },
-                toggleShift() { appState.isShiftActive = !appState.isShiftActive; this.updateKeys(); },
-                updateKeys() { DOM.keyboardContainer.querySelectorAll('.key').forEach(kEl => { const key = kEl.dataset.key; if (key.length === 1) kEl.textContent = appState.isShiftActive ? key.toUpperCase() : key.toLowerCase(); else if (key === 'SHIFT') kEl.classList.toggle('shift-active', appState.isShiftActive); }); },
                 handleKeyPress(key) { AudioManager.playSound('click'); if (key === '✓') { if(appState.playerName.length > 0) { saveState(); DOM.levelSelectGreeting.textContent = `¡Hola, ${appState.playerName}!`; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); } return; } if (key === 'BACKSPACE') appState.playerName = appState.playerName.slice(0, -1); else if (key === 'SHIFT') this.toggleShift(); else if (appState.playerName.length < 15) { const char = appState.isShiftActive ? key.toUpperCase() : key.toLowerCase(); appState.playerName += char; if (appState.isShiftActive) this.toggleShift(); } UIManager.updateNameDisplay(); }
             };
             const Numpad = {
-                init() { const keys = ['1','2','3','4','5','6','7','8','9','C','0','ENTER']; DOM.numpadGrid.innerHTML = ''; keys.forEach(key => { const kEl = document.createElement('div'); kEl.className = 'key'; kEl.dataset.key = key; if (key === 'C') { kEl.innerHTML = ICONS.CLEAR; } else if (key === 'ENTER') { kEl.id = 'numpad-enter'; kEl.classList.add('function', 'disabled'); kEl.innerHTML = ICONS.ENTER; } else { kEl.textContent = key; } DOM.numpadGrid.appendChild(kEl); }); DOM.numpadEnter = document.getElementById('numpad-enter'); },
+                init() { const keys = ['7','8','9','4','5','6','1','2','3','C','0','ENTER']; DOM.numpadGrid.innerHTML = ''; keys.forEach(key => { const kEl = document.createElement('div'); kEl.className = 'key'; kEl.dataset.key = key; if (key === 'C') { kEl.innerHTML = ICONS.CLEAR; } else if (key === 'ENTER') { kEl.id = 'numpad-enter'; kEl.classList.add('function', 'disabled'); kEl.innerHTML = ICONS.ENTER; } else { kEl.textContent = key; } DOM.numpadGrid.appendChild(kEl); }); DOM.numpadEnter = document.getElementById('numpad-enter'); },
                 handleKeyPress(key) { AudioManager.playSound('click'); if (key === 'C') appState.userAnswer = ''; else if (key === 'ENTER') { if (appState.userAnswer.length > 0) { UIManager.triggerAnimation(DOM.numpadEnter, 'flash-animation'); setTimeout(() => GameManager.checkAnswer(), 200); } } else if (appState.userAnswer.length < 6) appState.userAnswer += key; UIManager.updateAnswerDisplay(); }
             };
-            function generateSessionPriceList() {
-                appState.sessionPriceList = {};
-                Object.values(THEMED_PRODUCTS).flat().forEach(product => {
-                    appState.sessionPriceList[product.name] = getRandomInt(product.priceRange[0], product.priceRange[1]);
-                });
-            }
-            function setupEventListeners() {
-                DOM.btnStart.addEventListener('click', () => {
-                    AudioManager.init();
-                    AudioManager.playSound('click');
-                    requestFullscreen(DOM.appContainer);
-                    if (appState.playerName) { DOM.levelSelectGreeting.textContent = `¡Bienvenido de nuevo, ${appState.playerName}!`; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); } 
-                    else { UIManager.goToScreen('screen-name'); }
-                });
-                DOM.btnChangeName.addEventListener('click', () => {
-                    AudioManager.playSound('click');
-                    if (window.confirm("¿Estás seguro? Cambiar tu nombre reiniciará TODO tu progreso (niveles y estrellas). Esta acción es irreversible.")) {
-                        localStorage.removeItem(SAVE_KEY);
-                        location.reload();
-                    }
-                });
-                DOM.btnResetProgress.addEventListener('click', () => {
-                    AudioManager.playSound('click');
-                    if (window.confirm("¿Estás seguro de que quieres reiniciar TODO tu progreso? Esta acción no se puede deshacer.")) {
-                        localStorage.removeItem(SAVE_KEY);
-                        location.reload();
-                    }
-                });
-                DOM.keyboardContainer.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) VirtualKeyboard.handleKeyPress(keyEl.dataset.key); });
-                DOM.levelSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.level-btn'); if (btn && !btn.disabled) { AudioManager.playSound('click'); GameManager.startNewMission(parseInt(btn.dataset.levelIndex)); } });
-                DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); });
-                window.addEventListener('resize', () => {
-                    if (activeScreenId === 'screen-level-select') UIManager.checkAndSetLayoutMode();
-                    if (activeScreenId === 'screen-game') UIManager.adjustGameLayout();
-                });
-                DOM.btnProfile.addEventListener('click', () => { AudioManager.playSound('click'); UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); });
-                DOM.btnBackToLevels.addEventListener('click', () => { AudioManager.playSound('click'); UIManager.goToScreen('screen-level-select'); });
-                DOM.btnInfiniteMode.addEventListener('click', () => { AudioManager.playSound('click'); GameManager.startInfiniteMode(); });
-                DOM.titleSoundToggle.addEventListener('click', () => {
-                    AudioManager.toggleMute(!appState.isSoundEnabled);
-                    AudioManager.playSound('click');
-                });
-                DOM.mainSoundToggle.addEventListener('click', () => {
-                    AudioManager.toggleMute(!appState.isSoundEnabled);
-                    AudioManager.playSound('click');
-                });
-                document.addEventListener('keydown', handlePhysicalKeyboard);
-
-                document.addEventListener('fullscreenchange', () => {
-                    if (!document.fullscreenElement && activeScreenId !== 'screen-title' && activeScreenId !== 'screen-bios') {
-                        DOM.fullscreenPrompt.style.display = 'flex';
-                    }
-                });
-                DOM.btnGoFullscreen.addEventListener('click', () => {
-                    requestFullscreen(DOM.appContainer);
-                    DOM.fullscreenPrompt.style.display = 'none';
-                });
-                DOM.btnContinueAnyway.addEventListener('click', () => {
-                    DOM.fullscreenPrompt.style.display = 'none';
-                });
-                DOM.colorOptions.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.arsenal-btn');
-                    if(btn) {
-                        appState.preferences.theme = btn.dataset.theme;
-                        UIManager.applyPreferences();
-                        UIManager.renderProfile();
-                        saveState();
-                    }
-                });
-                 DOM.numpadOptions.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.arsenal-btn');
-                    if(btn) {
-                        appState.preferences.numpadStyle = btn.dataset.style;
-                        UIManager.applyPreferences();
-                        UIManager.renderProfile();
-                        saveState();
-                    }
-                });
-            }
-            function handlePhysicalKeyboard(e) {
-                if (activeScreenId === 'screen-name') {
-                    e.preventDefault();
-                    if (e.key.match(/^[a-zA-ZñÑ]$/)) {
-                        const key = e.key.toLowerCase();
-                        if (e.shiftKey !== appState.isShiftActive) VirtualKeyboard.toggleShift();
-                        VirtualKeyboard.handleKeyPress(key);
-                        flashKeyFeedback(`#keyboard-container .key[data-key="${key}"]`);
-                    } else if (e.key === 'Backspace') {
-                        VirtualKeyboard.handleKeyPress('BACKSPACE');
-                        flashKeyFeedback(`#keyboard-container .key[data-key="BACKSPACE"]`);
-                    } else if (e.key === 'Enter') {
-                        VirtualKeyboard.handleKeyPress('✓');
-                        flashKeyFeedback('#name-confirm-key');
-                    }
-                } else if (activeScreenId === 'screen-game') {
-                    e.preventDefault();
-                    if (e.key.match(/^[0-9]$/)) {
-                        Numpad.handleKeyPress(e.key);
-                        flashKeyFeedback(`#numpad-grid .key[data-key="${e.key}"]`);
-                    } else if (e.key === 'Backspace' || e.key.toLowerCase() === 'c') {
-                        Numpad.handleKeyPress('C');
-                        flashKeyFeedback(`#numpad-grid .key[data-key="C"]`);
-                    } else if (e.key === 'Enter') {
-                        Numpad.handleKeyPress('ENTER');
-                        flashKeyFeedback('#numpad-enter');
-                    }
-                }
-            }
-            function flashKeyFeedback(selector) {
-                const keyEl = document.querySelector(selector);
-                if (keyEl) UIManager.triggerAnimation(keyEl, 'key-flash');
-            }
-            function typewriter(element, text, speed = 50, callback = () => {}) {
-                let i = 0;
-                element.textContent = '';
-                function type() {
-                    if (i < text.length) {
-                        element.textContent += text.charAt(i);
-                        i++;
-                        setTimeout(type, speed);
-                    } else {
-                        if (callback) callback();
-                    }
-                }
-                type();
-            }
+            function generateSessionPriceList() { appState.sessionPriceList = {}; Object.values(THEMED_PRODUCTS).flat().forEach(product => { appState.sessionPriceList[product.name] = getRandomInt(product.priceRange[0], product.priceRange[1]); }); }
+            function setupEventListeners() { DOM.btnStart.addEventListener('click', () => { AudioManager.init(); AudioManager.playSound('click'); requestFullscreen(DOM.appContainer); if (appState.playerName) { DOM.levelSelectGreeting.textContent = `¡Bienvenido de nuevo, ${appState.playerName}!`; UIManager.renderLevelSelect(); UIManager.goToScreen('screen-level-select'); } else { UIManager.goToScreen('screen-name'); } }); DOM.btnChangeName.addEventListener('click', () => { AudioManager.playSound('click'); if (window.confirm("¿Estás seguro? Cambiar tu nombre reiniciará TODO tu progreso (niveles y estrellas). Esta acción es irreversible.")) { localStorage.removeItem(SAVE_KEY); location.reload(); } }); DOM.btnResetProgress.addEventListener('click', () => { AudioManager.playSound('click'); if (window.confirm("¿Estás seguro de que quieres reiniciar TODO tu progreso? Esta acción no se puede deshacer.")) { localStorage.removeItem(SAVE_KEY); location.reload(); } }); DOM.keyboardContainer.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) VirtualKeyboard.handleKeyPress(keyEl.dataset.key); }); DOM.levelSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.level-btn'); if (btn && !btn.disabled) { AudioManager.playSound('click'); GameManager.startNewMission(parseInt(btn.dataset.levelIndex)); } }); DOM.numpadGrid.addEventListener('click', (e) => { const keyEl = e.target.closest('.key'); if (keyEl) Numpad.handleKeyPress(keyEl.dataset.key); }); DOM.btnProfile.addEventListener('click', () => { AudioManager.playSound('click'); UIManager.renderProfile(); UIManager.goToScreen('screen-profile'); }); DOM.btnBackToLevels.addEventListener('click', () => { AudioManager.playSound('click'); UIManager.goToScreen('screen-level-select'); }); DOM.btnInfiniteMode.addEventListener('click', () => { AudioManager.playSound('click'); GameManager.startInfiniteMode(); }); DOM.titleSoundToggle.addEventListener('click', () => { AudioManager.toggleMute(!appState.isSoundEnabled); AudioManager.playSound('click'); }); DOM.mainSoundToggle.addEventListener('click', () => { AudioManager.toggleMute(!appState.isSoundEnabled); AudioManager.playSound('click'); }); document.addEventListener('keydown', handlePhysicalKeyboard); document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && activeScreenId !== 'screen-title' && activeScreenId !== 'screen-bios') DOM.fullscreenPrompt.style.display = 'flex'; }); DOM.btnGoFullscreen.addEventListener('click', () => { requestFullscreen(DOM.appContainer); DOM.fullscreenPrompt.style.display = 'none'; }); DOM.btnContinueAnyway.addEventListener('click', () => { DOM.fullscreenPrompt.style.display = 'none'; }); DOM.colorOptions.addEventListener('click', (e) => { const btn = e.target.closest('.arsenal-btn'); if(btn) { appState.preferences.theme = btn.dataset.theme; UIManager.applyPreferences(); UIManager.renderProfile(); saveState(); } }); DOM.numpadOptions.addEventListener('click', (e) => { const btn = e.target.closest('.arsenal-btn'); if(btn) { appState.preferences.numpadStyle = btn.dataset.style; UIManager.applyPreferences(); UIManager.renderProfile(); saveState(); } }); }
+            function handlePhysicalKeyboard(e) { if (activeScreenId === 'screen-name') { e.preventDefault(); if (e.key.match(/^[a-zA-ZñÑ]$/)) { const key = e.key.toLowerCase(); if (e.shiftKey !== appState.isShiftActive) VirtualKeyboard.toggleShift(); VirtualKeyboard.handleKeyPress(key); flashKeyFeedback(`#keyboard-container .key[data-key="${key}"]`); } else if (e.key === 'Backspace') { VirtualKeyboard.handleKeyPress('BACKSPACE'); flashKeyFeedback(`#keyboard-container .key[data-key="BACKSPACE"]`); } else if (e.key === 'Enter') { VirtualKeyboard.handleKeyPress('✓'); flashKeyFeedback('#name-confirm-key'); } } else if (activeScreenId === 'screen-game') { e.preventDefault(); if (e.key.match(/^[0-9]$/)) { Numpad.handleKeyPress(e.key); flashKeyFeedback(`#numpad-grid .key[data-key="${e.key}"]`); } else if (e.key === 'Backspace' || e.key.toLowerCase() === 'c') { Numpad.handleKeyPress('C'); flashKeyFeedback(`#numpad-grid .key[data-key="C"]`); } else if (e.key === 'Enter') { Numpad.handleKeyPress('ENTER'); flashKeyFeedback('#numpad-enter'); } } }
+            function flashKeyFeedback(selector) { const keyEl = document.querySelector(selector); if (keyEl) UIManager.triggerAnimation(keyEl, 'key-flash'); }
+            function typewriter(element, text, speed = 50, callback = () => {}) { let i = 0; element.textContent = ''; function type() { if (i < text.length) { element.textContent += text.charAt(i); i++; setTimeout(type, speed); } else if (callback) callback(); } type(); }
             function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
             function requestFullscreen(element) { try { if (document.fullscreenElement) return; if (element.requestFullscreen) element.requestFullscreen().catch(err => {}); else if (element.mozRequestFullScreen) element.mozRequestFullScreen(); else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen(); else if (element.msRequestFullscreen) element.msRequestFullscreen(); } catch (e) { console.warn("Fullscreen request was denied or failed."); } }
             
             function init() {
-                DOM = {
-                    appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudShield: document.getElementById('hud-shield'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), btnResetProgress: document.getElementById('btn-reset-progress'), levelSelectWrapper: document.querySelector('#screen-level-select .screen-content-wrapper'), biosText: document.getElementById('bios-text'),
-                    anomalyAlert: document.getElementById('anomaly-alert'), anomalyAlertTitle: document.getElementById('anomaly-alert-title'), anomalyAlertMessage: document.getElementById('anomaly-alert-message'),
-                    titleSoundToggle: document.getElementById('btn-sound-toggle'), mainSoundToggle: document.getElementById('btn-main-sound-toggle'),
-                    fullscreenPrompt: document.getElementById('fullscreen-prompt'), btnGoFullscreen: document.getElementById('btn-gofullscreen'), btnContinueAnyway: document.getElementById('btn-continue-anyway'),
-                    arsenalSection: document.getElementById('arsenal-section'), colorPaletteGroup: document.getElementById('color-palette-group'), colorOptions: document.getElementById('color-options'), numpadStyleGroup: document.getElementById('numpad-style-group'), numpadOptions: document.getElementById('numpad-options'),
-                };
+                DOM = { appContainer: document.getElementById('app-container'), gameScreen: document.getElementById('screen-game'), btnStart: document.getElementById('btn-start'), nameDisplay: document.getElementById('name-display'), keyboardContainer: document.getElementById('keyboard-container'), levelSelectGreeting: document.getElementById('level-select-greeting'), btnProfile: document.getElementById('btn-profile'), levelSelectGrid: document.getElementById('level-select-grid'), btnInfiniteMode: document.getElementById('btn-infinite-mode'), btnChangeName: document.getElementById('btn-change-name'), hudPlayerName: document.getElementById('hud-player-name'), hudWinsTracker: document.getElementById('hud-wins-tracker'), hudLives: document.getElementById('hud-lives'), hudShield: document.getElementById('hud-shield'), hudStreak: document.getElementById('hud-streak'), hudDifficulty: document.getElementById('hud-difficulty'), problemContainer: document.getElementById('problem-container'), answerDisplay: document.getElementById('answer-display'), numpadGrid: document.getElementById('numpad-grid'), resultScreen: document.getElementById('screen-result'), resultTitle: document.getElementById('result-title'), unlockMessage: document.getElementById('unlock-message'), resultIcon: document.getElementById('result-icon'), resultExplanation: document.getElementById('result-explanation'), btnNextMission: document.getElementById('btn-next-mission'), profilePlayerName: document.getElementById('profile-player-name'), profileTotalStars: document.getElementById('profile-total-stars'), profileMasteredLevels: document.getElementById('profile-mastered-levels'), btnBackToLevels: document.getElementById('btn-back-to-levels'), btnResetProgress: document.getElementById('btn-reset-progress'), biosText: document.getElementById('bios-text'), anomalyAlert: document.getElementById('anomaly-alert'), anomalyAlertTitle: document.getElementById('anomaly-alert-title'), anomalyAlertMessage: document.getElementById('anomaly-alert-message'), titleSoundToggle: document.getElementById('btn-sound-toggle'), mainSoundToggle: document.getElementById('btn-main-sound-toggle'), fullscreenPrompt: document.getElementById('fullscreen-prompt'), btnGoFullscreen: document.getElementById('btn-gofullscreen'), btnContinueAnyway: document.getElementById('btn-continue-anyway'), arsenalSection: document.getElementById('arsenal-section'), colorPaletteGroup: document.getElementById('color-palette-group'), colorOptions: document.getElementById('color-options'), numpadStyleGroup: document.getElementById('numpad-style-group'), numpadOptions: document.getElementById('numpad-options'), };
                 DOM.numpadEnter = document.getElementById('numpad-enter');
-                
-                loadState(); 
-                UIManager.applyPreferences();
-                generateSessionPriceList();
-                VirtualKeyboard.init(); Numpad.init(); 
-                DOM.btnProfile.innerHTML = ICONS.PROFILE;
-                DOM.btnChangeName.innerHTML = ICONS.SWITCH_PLAYER;
+                loadState(); UIManager.applyPreferences(); generateSessionPriceList(); VirtualKeyboard.init(); Numpad.init(); 
+                DOM.btnProfile.innerHTML = ICONS.PROFILE; DOM.btnChangeName.innerHTML = ICONS.SWITCH_PLAYER;
                 DOM.titleSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF;
                 DOM.mainSoundToggle.innerHTML = appState.isSoundEnabled ? ICONS.SOUND_ON : ICONS.SOUND_OFF;
                 setupEventListeners();
-                
-                typewriter(DOM.biosText, 'CARGANDO SISTEMA v3.0...', 75, () => {
-                    setTimeout(() => UIManager.goToScreen('screen-title'), 500);
-                });
+                typewriter(DOM.biosText, 'CARGANDO SISTEMA v4.0...', 75, () => { setTimeout(() => UIManager.goToScreen('screen-title'), 500); });
             }
             
             init();
